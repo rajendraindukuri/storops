@@ -16,7 +16,7 @@ StorOps: The Python Library for VNX & Unity
 .. image:: https://landscape.io/github/emc-openstack/storops/master/landscape.svg?style=flat
     :target: https://landscape.io/github/emc-openstack/storops/
 
-VERSION: 1.0.1
+VERSION: 1.1.0
 
 A minimalist Python library to manage VNX/Unity systems.
 This document lies in the source code and go with the release.
