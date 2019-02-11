@@ -17,17 +17,24 @@ from __future__ import unicode_literals
 
 import logging
 
+import retryz
+
+import storops.unity.resource.move_session
 import storops.unity.resource.pool
 from storops.exception import UnityBaseHasThinCloneError, \
     UnityResourceNotFoundError, UnityCGMemberActionNotSupportError, \
-    UnityThinCloneNotAllowedError
+    UnityThinCloneNotAllowedError, UnityMigrationSourceHasThinCloneError, \
+    UnityMigrationTimeoutException
 from storops.lib.thinclone_helper import TCHelper
 from storops.lib.version import version
+from storops.unity import enums
 from storops.unity.client import UnityClient
 from storops.unity.enums import TieringPolicyEnum, NodeEnum, \
     HostLUNAccessEnum, ThinCloneActionEnum, StorageResourceTypeEnum
 from storops.unity.resource import UnityResource, UnityResourceList
 from storops.unity.resource.host import UnityHostList
+from storops.unity.resource.replication_session import UnityResourceConfig, \
+    UnityReplicationSession
 from storops.unity.resource.snap import UnitySnap, UnitySnapList
 from storops.unity.resource.sp import UnityStorageProcessor
 from storops.unity.resource.storage_resource import UnityStorageResource
@@ -353,6 +360,46 @@ class UnityLun(UnityResource):
         return TCHelper.thin_clone(self._cli, self, name, io_limit_policy,
                                    description)
 
+    def _is_move_session_supported(self, dest):
+        if self.is_thin_clone:
+            log.error('Not support move session, source lun is thin clone.')
+            return False
+        if self.is_data_reduction_enabled and not dest.is_all_flash:
+            log.error('Not support move session, source lun is compressed, '
+                      'but destination pool is not all flash pool.')
+            return False
+        return True
+
+    def migrate(self, dest, **kwargs):
+        if not self._is_move_session_supported(dest):
+            return False
+
+        interval = kwargs.pop('interval', 5)
+        timeout = kwargs.pop('timeout', 1800)
+
+        @retryz.retry(timeout=timeout, wait=interval,
+                      on_return=lambda x: not isinstance(x, bool))
+        def _do_check_move_session(move_session_id):
+            move_session = clz.get(self._cli, _id=move_session_id)
+            if move_session.state == enums.MoveSessionStateEnum.COMPLETED:
+                return True
+            if move_session.state in [enums.MoveSessionStateEnum.FAILED,
+                                      enums.MoveSessionStateEnum.CANCELLED]:
+                return False
+
+        clz = storops.unity.resource.move_session.UnityMoveSession
+        is_compressed = self.is_data_reduction_enabled
+
+        try:
+            move_session = clz.create(self._cli, self, dest,
+                                      is_data_reduction_applied=is_compressed)
+            return _do_check_move_session(move_session.id)
+        except UnityMigrationSourceHasThinCloneError:
+            log.error('Not support move session, source lun has thin clone.')
+            return False
+        except retryz.RetryTimeoutError:
+            raise UnityMigrationTimeoutException()
+
     # `__getstate__` and `__setstate__` are used by Pickle.
     def __getstate__(self):
         return {'_id': self.get_id(), 'cli': self._cli}
@@ -364,6 +411,73 @@ class UnityLun(UnityResource):
     def snapshots(self):
         return UnitySnapList(cli=self._cli,
                              storage_resource=self.storage_resource)
+
+    def replicate(self, dst_lun_id, max_time_out_of_sync,
+                  replication_name=None, replicate_existing_snaps=None,
+                  remote_system=None):
+        """
+        Creates a replication session with a existing lun as destination.
+
+        :param dst_lun_id: destination lun id.
+        :param max_time_out_of_sync: maximum time to wait before syncing the
+            source and destination. Value `-1` means the automatic sync is not
+            performed. `0` means it is a sync replication.
+        :param replication_name: replication name.
+        :param replicate_existing_snaps: whether to replicate existing snaps.
+        :param remote_system: `UnityRemoteSystem` object. The remote system to
+            which the replication is being configured. When not specified, it
+            defaults to local system.
+        :return: created replication session.
+        """
+
+        return UnityReplicationSession.create(
+            self._cli, self.get_id(), dst_lun_id, max_time_out_of_sync,
+            name=replication_name,
+            replicate_existing_snaps=replicate_existing_snaps,
+            remote_system=remote_system)
+
+    def replicate_with_dst_resource_provisioning(self, max_time_out_of_sync,
+                                                 dst_pool_id,
+                                                 dst_lun_name=None,
+                                                 remote_system=None,
+                                                 replication_name=None,
+                                                 dst_size=None, dst_sp=None,
+                                                 is_dst_thin=None,
+                                                 dst_tiering_policy=None,
+                                                 is_dst_compression=None):
+        """
+        Creates a replication session with destination lun provisioning.
+
+        :param max_time_out_of_sync: maximum time to wait before syncing the
+            source and destination. Value `-1` means the automatic sync is not
+            performed. `0` means it is a sync replication.
+        :param dst_pool_id: id of pool to allocate destination lun.
+        :param dst_lun_name: destination lun name.
+        :param remote_system: `UnityRemoteSystem` object. The remote system to
+            which the replication is being configured. When not specified, it
+            defaults to local system.
+        :param replication_name: replication name.
+        :param dst_size: destination lun size.
+        :param dst_sp: `NodeEnum` value. Default storage processor of
+            destination lun.
+        :param is_dst_thin: indicates whether destination lun is thin or not.
+        :param dst_tiering_policy: `TieringPolicyEnum` value. Tiering policy of
+            destination lun.
+        :param is_dst_compression: indicates whether destination lun is
+            compression enabled or not.
+        :return: created replication session.
+        """
+
+        dst_size = self.size_total if dst_size is None else dst_size
+
+        dst_resource = UnityResourceConfig.to_embedded(
+            name=dst_lun_name, pool_id=dst_pool_id,
+            size=dst_size, default_sp=dst_sp,
+            tiering_policy=dst_tiering_policy, is_thin_enabled=is_dst_thin,
+            is_compression_enabled=is_dst_compression)
+        return UnityReplicationSession.create_with_dst_resource_provisioning(
+            self._cli, self.get_id(), dst_resource, max_time_out_of_sync,
+            remote_system=remote_system, name=replication_name)
 
 
 class UnityLunList(UnityResourceList):

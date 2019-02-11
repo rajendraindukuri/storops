@@ -22,7 +22,8 @@ from hamcrest import equal_to, assert_that, instance_of, none, raises
 
 from storops.exception import UnityResourceNotFoundError, \
     UnityFileSystemNameAlreadyExisted, UnitySnapNameInUseError, \
-    UnityFileSystemSizeTooSmallError
+    UnityFileSystemSizeTooSmallError, UnityShareShrinkSizeTooLargeError,\
+    UnityShareShrinkSizeTooSmallError
 from storops.unity.enums import FilesystemTypeEnum, TieringPolicyEnum, \
     FSSupportedProtocolEnum, AccessPolicyEnum, FSFormatEnum, \
     ResourcePoolFullPolicyEnum, HostIOSizeEnum, NFSShareDefaultAccessEnum, \
@@ -115,6 +116,34 @@ class UnityFileSystemTest(TestCase):
 
         assert_that(f, raises(UnityFileSystemSizeTooSmallError,
                               'size is too small'))
+
+    @patch_rest
+    def test_shrink_success(self):
+        fs = UnityFileSystem(_id='fs_8', cli=t_rest())
+        resp = fs.shrink(1024 ** 3 * 2.5)
+        assert_that(resp.is_ok(), equal_to(True))
+
+    @patch_rest
+    def test_shrink_size_too_large_error(self):
+        def f():
+            fs = UnityFileSystem(_id='fs_8', cli=t_rest())
+            fs.storage_resource.size_total = 1024 ** 3 * 3
+            fs.shrink(1024 ** 3 * 4)
+
+        message = 'Reject shrink share request, ' \
+                  'the new size should be smaller than original.'
+        assert_that(f, raises(UnityShareShrinkSizeTooLargeError, message))
+
+    @patch_rest
+    def test_shrink_size_too_small_error(self):
+        def f():
+            fs = UnityFileSystem(_id='fs_8', cli=t_rest())
+            fs.storage_resource.size_used = 1024 ** 3 * 3
+            fs.shrink(1024 ** 3 * 2)
+
+        message = 'Reject shrink share request, ' \
+                  'the new size should be larger than used.'
+        assert_that(f, raises(UnityShareShrinkSizeTooSmallError, message))
 
     @patch_rest
     def test_create_success(self):

@@ -16,7 +16,7 @@ StorOps: The Python Library for VNX & Unity
 .. image:: https://landscape.io/github/emc-openstack/storops/master/landscape.svg?style=flat
     :target: https://landscape.io/github/emc-openstack/storops/
 
-VERSION: 1.0.1
+VERSION: 1.1.0
 
 A minimalist Python library to manage VNX/Unity systems.
 This document lies in the source code and go with the release.
@@ -153,6 +153,7 @@ Feature List
         - list/create/delete iSCSI portals
         - list/create/delete link aggregations
         - list/create/delete Consistency Groups
+        - list/create/modify/cancel move sessions
         - list/create/delete metric real time query
         - list metrics query result
         - list disks
@@ -165,6 +166,11 @@ Feature List
         - list management interfaces
         - list power supplies
         - list ssds
+        - list remote interfaces
+        - list/create/modify/verify/delete remote systems
+        - list/create/modify/delete replication interfaces
+        - list/create/modify/delete replication sessions
+        - failover/failback/pause/resume/sync replication sessions
     - supported feature/operations
         - CIFS share access control
         - NFS share access control
@@ -172,6 +178,8 @@ Feature List
         - Persist historical metric data to csv files
         - Upload license
         - enable/disable LUN data reduction
+        - LUN migration
+        - LUN replication
     - supported metrics
         - system
             - read/write/total IOPS
