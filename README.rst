@@ -456,16 +456,18 @@ Contributors
 EMC Contributors
 ````````````````
 
-- Cedric Zhuang <cedric.zhuang@emc.com>
-- Jay Xu <jay.xu@emc.com>
-- Ray Chen <ray.chen@emc.com>
-- Tina Tang <tina.tang@emc.com>
-- Ryan Liang <ryan.liang@emc.com>
-- Wang Peter <peter.wang13@emc.com>
+- Ryan Liang <ryan.liang@dell.com>
+- Yong Huang <yong.huang@dell.com>
+- Dong Ding <dong.ding@dell.com>
 
 Community Contributors
 ``````````````````````
 
+- Cedric Zhuang
+- Jay Xu
+- Ray Chen
+- Tina Tang
+- Peter Wang
 - Paulo Matias <matias@ufscar.br>
 
 Patches and Suggestions
