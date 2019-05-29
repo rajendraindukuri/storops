@@ -41,6 +41,10 @@
       "response": "move_34.json"
     },
     {
+      "url": "/api/instances/moveSession/move_35?compact=True&fields=avgTransferRate,currentTransferRate,destinationPool,estTimeRemaining,health,id,priority,progressPct,sourceMemberLun,sourceStorageResource,state,status",
+      "response": "move_35.json"
+    },
+    {
       "url": "/api/instances/moveSession/move_31?compact=True&fields=avgTransferRate,currentTransferRate,destinationPool,estTimeRemaining,health,id,priority,progressPct,sourceMemberLun,sourceStorageResource,state,status",
       "response": "error_has_thin_clones.json"
     },
@@ -149,6 +153,21 @@
         }
       },
       "response": "create_move_34.json"
+    },
+    {
+      "url": "/api/types/moveSession/instances?compact=True",
+      "body": {
+        "isDataReductionApplied": false,
+        "isDestThin": false,
+        "priority": 5,
+        "destinationPool": {
+          "id": "pool_6"
+        },
+        "sourceStorageResource": {
+          "id": "sv_19"
+        }
+      },
+      "response": "create_move_35.json"
     },
     {
       "url": "/api/instances/moveSession/move_32/action/modify?compact=True",
