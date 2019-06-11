@@ -2227,3 +2227,18 @@ UnityImportSession:
     - label: cutoverThreshold
     - label: remainingDataPercent
     - label: estimatedCutoverWindow
+
+UnityAlertConfigSNMPTarget:
+  data_src: rest
+  name: alertConfigSNMPTarget
+  properties:
+    - label: id
+    - label: address
+    - label: username
+    - label: community
+    - label: snmpAuthProtocol
+      converter: SNMPAuthProtocolEnum
+    - label: snmpPrivacyProtocol
+      converter: SNMPPrivacyProtocolEnum
+    - label: snmpVersion
+      converter: SNMPVersionEnum
