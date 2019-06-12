@@ -26,6 +26,8 @@ from storops.unity.client import UnityClient
 from storops.unity.enums import UnityEnum, DNSServerOriginEnum
 from storops.unity.resource import UnityResource, UnityResourceList, \
     UnitySingletonResource, UnityAttributeResource
+from storops.unity.resource.alert_config_snmp import \
+    UnityAlertConfigSNMPTarget, UnityAlertConfigSNMPTargetList
 from storops.unity.resource.cifs_server import UnityCifsServerList
 from storops.unity.resource.cifs_share import UnityCifsShareList
 from storops.unity.resource.disk import UnityDiskList, UnityDiskGroupList
@@ -33,6 +35,7 @@ from storops.unity.resource.dns_server import UnityFileDnsServerList
 from storops.unity.resource.filesystem import UnityFileSystemList
 from storops.unity.resource.host import UnityHost, UnityHostList, \
     UnityHostIpPortList, UnityHostInitiatorList
+from storops.unity.resource.import_session import UnityImportSessionList
 from storops.unity.resource.interface import UnityFileInterfaceList
 from storops.unity.resource.lun import UnityLunList
 from storops.unity.resource.metric import UnityMetricRealTimeQuery
@@ -573,6 +576,30 @@ class UnitySystem(UnitySingletonResource):
             UnityReplicationSessionList, _id=_id, name=name,
             src_resource_id=src_resource_id, dst_resource_id=dst_resource_id,
             **filters)
+
+    def get_import_session(self, _id=None, name=None, **filters):
+        return self._get_unity_rsc(
+            UnityImportSessionList, _id=_id, name=name, **filters)
+
+    def create_alert_snmp_config(self, target_address, auth_protocol=None,
+                                 username=None, auth_password=None,
+                                 priv_protocol=None, priv_password=None,
+                                 snmp_version=None, community=None):
+        if not (community or username):
+            raise storops.exception.UnityPolicyInvalidParametersError()
+        alert = UnityAlertConfigSNMPTarget.create(self._cli, target_address,
+                                                  auth_protocol=auth_protocol,
+                                                  username=username,
+                                                  auth_password=auth_password,
+                                                  priv_protocol=priv_protocol,
+                                                  priv_password=priv_password,
+                                                  snmp_version=snmp_version,
+                                                  community=community)
+        return alert
+
+    def get_alert_snmp_config(self, _id=None, **filters):
+        return self._get_unity_rsc(UnityAlertConfigSNMPTargetList,
+                                   _id=_id, **filters)
 
 
 class UnitySystemList(UnityResourceList):

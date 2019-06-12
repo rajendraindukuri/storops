@@ -331,6 +331,12 @@ class UnityLunException(UnityException):
 
 
 @rest_exception
+class UnityPolicyInvalidParametersError(UnityException):
+    error_code = 5
+    message = 'One or more specified parameters are invalid.'
+
+
+@rest_exception
 class UnityActionNotAllowedError(UnityException):
     error_code = 131149836
     message = 'Action is not allowed for the resource.'
@@ -344,6 +350,11 @@ class UnityLunNameInUseError(UnityLunException):
 @rest_exception
 class UnityLunShrinkNotSupportedError(UnityLunException):
     error_code = 108007728
+
+
+@rest_exception
+class UnityLunDeleteSnapshotsAttachedError(UnityLunException):
+    error_code = 100666394
 
 
 @rest_exception
@@ -1361,3 +1372,20 @@ class UnityMigrationTimeoutException(UnityMigrationException):
 @rest_exception
 class UnityDeleteLunInReplicationError(UnityException):
     error_code = 105906485
+
+
+class UnityImportSessionException(UnityException):
+    """Unity exceptions for Import Session.
+
+    Any import session related exceptions should inherit this exception."""
+    pass
+
+
+@rest_exception
+class UnityVNXSANCopyHostNotExistsError(UnityImportSessionException):
+    error_code = 105906713
+
+
+@rest_exception
+class UnitySourceResourceInAnImportSessionError(UnityImportSessionException):
+    error_code = 105906723

@@ -23,14 +23,18 @@ from hamcrest import assert_that, equal_to, instance_of, only_contains, \
     raises, contains_string, is_in, has_items, none
 
 from storops.exception import UnityResourceNotFoundError, \
-    UnityHostNameInUseError, UnityActionNotAllowedError
+    UnityHostNameInUseError, UnityActionNotAllowedError, \
+    UnityPolicyInvalidParametersError
 from storops.lib.resource import ResourceList
 from storops.unity.enums import EnclosureTypeEnum, DiskTypeEnum, HealthEnum, \
     HostTypeEnum, ServiceLevelEnum, ServiceLevelEnumList, \
     StorageResourceTypeEnum, DNSServerOriginEnum, TierTypeEnum, \
     RaidTypeEnum, RaidStripeWidthEnum, StoragePoolTypeEnum, DiskTypeEnumList, \
     SpeedValuesEnum, ConnectorTypeEnum, FeatureStateEnum, \
-    InterfaceConfigModeEnum, IpProtocolVersionEnum
+    InterfaceConfigModeEnum, IpProtocolVersionEnum, SNMPAuthProtocolEnum, \
+    SNMPPrivacyProtocolEnum
+from storops.unity.resource.alert_config_snmp import \
+    UnityAlertConfigSNMPTarget, UnityAlertConfigSNMPTargetList
 from storops.unity.resource.cifs_server import UnityCifsServerList
 from storops.unity.resource.cifs_share import UnityCifsShareList, \
     UnityCifsShare
@@ -41,6 +45,7 @@ from storops.unity.resource.filesystem import UnityFileSystemList, \
 from storops.unity.resource.health import UnityHealth
 from storops.unity.resource.host import UnityHostInitiator, \
     UnityHostInitiatorList, UnityHost, UnityHostList
+from storops.unity.resource.import_session import UnityImportSessionList
 from storops.unity.resource.interface import UnityFileInterfaceList
 from storops.unity.resource.lun import UnityLun
 from storops.unity.resource.lun import UnityLunList
@@ -708,6 +713,75 @@ class UnitySystemTest(TestCase):
         move_sessions = unity.get_move_session()
         assert_that(move_sessions, instance_of(UnityMoveSessionList))
         assert_that(len(move_sessions), equal_to(1))
+
+    @patch_rest
+    def test_get_import_session(self):
+        unity = t_unity()
+        sessions = unity.get_import_session()
+        assert_that(sessions, instance_of(UnityImportSessionList))
+        assert_that(len(sessions), equal_to(3))
+
+    @patch_rest
+    def test_create_alert_snmp_v3_config(self):
+        unity = t_unity()
+        alert_snmp_config = unity.create_alert_snmp_config(
+            '10.10.10.111', username='test_username',
+            auth_protocol=SNMPAuthProtocolEnum.MD5,
+            priv_protocol=SNMPPrivacyProtocolEnum.AES,
+            auth_password='auth_password_test')
+        assert_that(alert_snmp_config, instance_of(
+            UnityAlertConfigSNMPTarget))
+        assert_that(alert_snmp_config.username, equal_to('test_username'))
+        assert_that(alert_snmp_config.get_id(), equal_to('snmp_target_8'))
+        assert_that(alert_snmp_config.address, equal_to('10.10.10.111'))
+
+    @patch_rest
+    def test_create_alert_snmp_v2_config(self):
+        unity = t_unity()
+        alert_snmp_config = unity.create_alert_snmp_config(
+            '10.10.10.222', community='test_community')
+        assert_that(alert_snmp_config, instance_of(
+            UnityAlertConfigSNMPTarget))
+        assert_that(alert_snmp_config.get_id(), equal_to(
+            'snmp_target_9'))
+        assert_that(alert_snmp_config.address, equal_to('10.10.10.222'))
+
+    @patch_rest
+    def test_create_invalid_snmp_config(self):
+        def f():
+            unity = t_unity()
+            unity.create_alert_snmp_config('10.244.166.123')
+
+        assert_that(f, raises(
+            UnityPolicyInvalidParametersError,
+            'One or more specified parameters are invalid.'))
+
+    @patch_rest
+    def test_query_alert_snmp_config(self):
+        unity = t_unity()
+        alert_snmp_config = unity.get_alert_snmp_config(
+            'snmp_target_8')
+        assert_that(alert_snmp_config, instance_of(
+            UnityAlertConfigSNMPTarget))
+        assert_that(alert_snmp_config.get_id(), equal_to(
+            'snmp_target_8'))
+
+    @patch_rest
+    def test_query_by_ip(self):
+        unity = t_unity()
+        alert_snmp_configs = unity.get_alert_snmp_config(
+            address='16.16.16.16')
+        assert_that(alert_snmp_configs, instance_of(
+            UnityAlertConfigSNMPTargetList))
+        assert_that(len(alert_snmp_configs), equal_to(2))
+
+    @patch_rest
+    def test_query_all_alert_snmp_configs(self):
+        unity = t_unity()
+        alert_snmp_configs = unity.get_alert_snmp_config()
+        assert_that(alert_snmp_configs, instance_of(
+            UnityAlertConfigSNMPTargetList))
+        assert_that(len(alert_snmp_configs), equal_to(4))
 
 
 class UnityDpeTest(TestCase):

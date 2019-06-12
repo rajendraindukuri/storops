@@ -376,6 +376,8 @@ class UnityLun(UnityResource):
 
         interval = kwargs.pop('interval', 5)
         timeout = kwargs.pop('timeout', 1800)
+        is_thin = kwargs.get('is_thin')
+        is_compressed = kwargs.get('is_compressed')
 
         @retryz.retry(timeout=timeout, wait=interval,
                       on_return=lambda x: not isinstance(x, bool))
@@ -388,11 +390,12 @@ class UnityLun(UnityResource):
                 return False
 
         clz = storops.unity.resource.move_session.UnityMoveSession
-        is_compressed = self.is_data_reduction_enabled
-
+        if is_compressed not in (True, False):
+            is_compressed = self.is_data_reduction_enabled
         try:
             move_session = clz.create(self._cli, self, dest,
-                                      is_data_reduction_applied=is_compressed)
+                                      is_data_reduction_applied=is_compressed,
+                                      is_dest_thin=is_thin)
             return _do_check_move_session(move_session.id)
         except UnityMigrationSourceHasThinCloneError:
             log.error('Not support move session, source lun has thin clone.')
