@@ -322,6 +322,7 @@ class EnclosureTypeEnum(UnityEnum):
     NAGA_12G_SAS_DAE = (32, '80 Drive 12G DAE')
     MIRANDA_12G_SAS_DPE = (36, '25 Drive 12G DPE')
     RHEA_12G_SAS_DPE = (37, '12 Drive 12G DPE')
+    SCORP_12G_SAS_DPE = (38, '25 Drive 12G DPE')
     VIRTUAL_DPE = (100, 'Virtual DPE')
     UNSUPPORTED = (999, 'Unsupported Enclosure')
 
@@ -737,6 +738,7 @@ class MetricTypeEnum(UnityEnum):
 class DiskTechnologyEnum(UnityEnum):
     SAS = (1, 'SAS')
     NL_SAS = (2, 'NL_SAS')
+    EFD = (5, 'EFD')
     SAS_FLASH_2 = (6, 'SAS_FLASH_2')
     SAS_FLASH_3 = (7, 'SAS_FLASH_3')
     SAS_FLASH_4 = (8, 'SAS_FLASH_4')
