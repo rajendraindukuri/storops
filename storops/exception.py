@@ -1393,3 +1393,26 @@ class UnitySourceResourceInAnImportSessionError(UnityImportSessionException):
 
 class StoropsConnectTimeoutError(StoropsException):
     pass
+
+
+class UnityReplicationError(UnityException):
+    pass
+
+
+class UnityLocalReplicationFsNameNotSameError(UnityReplicationError):
+    pass
+
+
+@rest_exception
+class UnityFileResourceReplicationInUseError(UnityReplicationError):
+    error_code = 105906504
+
+
+@rest_exception
+class UnityDeleteShareFromDestNasServerError(UnityReplicationError):
+    error_code = 151036197
+
+
+@rest_exception
+class UnityFailoverNasRepWithFsRepOutOfSyncError(UnityReplicationError):
+    error_code = 105906786
