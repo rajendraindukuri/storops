@@ -16,8 +16,8 @@
 from __future__ import unicode_literals
 
 import logging
-
 import re
+
 import six
 
 from storops.lib.ex_decorator_factory import MappedErrorCodeDecoratorFactory, \
@@ -1389,3 +1389,30 @@ class UnityVNXSANCopyHostNotExistsError(UnityImportSessionException):
 @rest_exception
 class UnitySourceResourceInAnImportSessionError(UnityImportSessionException):
     error_code = 105906723
+
+
+class StoropsConnectTimeoutError(StoropsException):
+    pass
+
+
+class UnityReplicationError(UnityException):
+    pass
+
+
+class UnityLocalReplicationFsNameNotSameError(UnityReplicationError):
+    pass
+
+
+@rest_exception
+class UnityFileResourceReplicationInUseError(UnityReplicationError):
+    error_code = 105906504
+
+
+@rest_exception
+class UnityDeleteShareFromDestNasServerError(UnityReplicationError):
+    error_code = 151036197
+
+
+@rest_exception
+class UnityFailoverNasRepWithFsRepOutOfSyncError(UnityReplicationError):
+    error_code = 105906786
