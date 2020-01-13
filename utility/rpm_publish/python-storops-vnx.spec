@@ -55,7 +55,7 @@ Library for managing Unity/VNX systems. Please refer to https://github.com/emc-o
 
 
 %prep
-%setup -q -n %{pypi_name}-v%{upstream_version}
+%setup -q -n %{pypi_name}-%{upstream_version}
 
 
 %files -n python2-%{pypi_name}-vnx

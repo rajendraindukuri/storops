@@ -34,7 +34,7 @@ else
     sudo yum install -y curl
 
     release='latest'
-    [ -n "$1" ] && release="tags/r$1"
+    [ -n "$1" ] && release="tags/v$1"
 
     git_repos="emc-openstack/storops/releases/${release}"
 
