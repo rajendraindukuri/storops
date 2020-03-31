@@ -1160,3 +1160,19 @@ class ImportStageEnum(UnityEnum):
     INITIAL = (0, 'Initial')
     INCREMENTAL = (1, 'Incremental')
     FINAL = (2, 'Final')
+
+
+class DayOfWeekEnum(UnityEnum):
+    SUNDAY = (1, 'Sunday')
+    MONDAY = (2, 'Monday')
+    TUESDAY = (3, 'Tuesday')
+    WEDNESDAY = (4, 'Wednesday')
+    THURSDAY = (5, 'Thursday')
+    FRIDAY = (6, 'Friday')
+    SATURDAY = (7, 'Saturday')
+
+
+class DayOfWeekEnumList(UnityEnumList):
+    @classmethod
+    def get_enum_class(cls):
+        return DayOfWeekEnum
