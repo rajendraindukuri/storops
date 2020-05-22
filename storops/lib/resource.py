@@ -218,7 +218,7 @@ class ResourceList(Resource):
 
     @classmethod
     def get_rsc_clz_list(cls, rsc_list_collection):
-        return [l.get_resource_class() for l in rsc_list_collection]
+        return [lst.get_resource_class() for lst in rsc_list_collection]
 
     @clear_instance_cache
     def update(self, data=None):

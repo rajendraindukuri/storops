@@ -68,9 +68,9 @@ class UnityNfsHostConfig(object):
             ret = left
         else:
             ret = []
-            for l in left:
-                if l not in right:
-                    ret.append(l)
+            for lft in left:
+                if lft not in right:
+                    ret.append(lft)
         return ret
 
     def allow_root(self, *hosts):
