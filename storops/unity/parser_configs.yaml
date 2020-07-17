@@ -2035,6 +2035,8 @@ UnityReplicationSession:
     - label: syncProgress
     - label: syncState
       converter: ReplicationSessionSyncStateEnum
+    - label: srcSysName
+    - label: dstSysName
 
 
 UnityLunInfo:

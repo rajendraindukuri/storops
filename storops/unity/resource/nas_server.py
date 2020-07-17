@@ -27,7 +27,7 @@ from storops.exception import UnityCifsServiceNotEnabledError, \
 from storops.unity.enums import ReplicationEndpointResourceTypeEnum
 from storops.unity.resource import UnityResource, UnityResourceList
 from storops.unity.resource.replication_session import UnityResourceConfig, \
-    UnityReplicationSession
+    UnityReplicationSession, UnityReplicationSessionList
 from storops.unity.resource.sp import UnityStorageProcessor
 from storops.unity.resource.tenant import UnityTenant
 
@@ -171,7 +171,8 @@ class UnityNasServer(UnityResource):
                                                  remote_system=None,
                                                  replication_name=None,
                                                  dst_sp=None,
-                                                 is_backup_only=None):
+                                                 is_backup_only=None,
+                                                 filesystems=None):
         """
         Creates a replication session with destination nas server provisioning.
 
@@ -188,6 +189,9 @@ class UnityNasServer(UnityResource):
             destination nas server. It is required to create remote
             replication.
         :param is_backup_only: is backup only or not.
+        :param filesystems: list of `UnityFileSystem` object. These existing
+            filesystems in this nas server will be replicated to the
+            destination with the nas server.
         :return: created replication session.
         """
         if remote_system and (dst_sp is None):
@@ -199,10 +203,38 @@ class UnityNasServer(UnityResource):
             default_sp=dst_sp, is_backup_only=is_backup_only,
             replication_resource_type=(
                 ReplicationEndpointResourceTypeEnum.NASSERVER))
+
+        dst_resource_element_configs = [
+            UnityResourceConfig.to_embedded(
+                name=fs.name, pool_id=dst_pool_id,
+                src_id=fs.storage_resource.get_id(),
+                is_thin_enabled=fs.is_thin_enabled, size=fs.size_total,
+                tiering_policy=fs.tiering_policy)
+            for fs in filesystems]
         return UnityReplicationSession.create_with_dst_resource_provisioning(
             self._cli, self.get_id(), dst_resource, max_time_out_of_sync,
             remote_system=remote_system, name=replication_name,
+            dst_resource_element_configs=dst_resource_element_configs
         )
+
+    def delete_replication(self, remote_system=None, dst_nas_server=None):
+        """Deletes the replication sessions with this nas server as source.
+
+        All replication sessions will be deleted if both remote_system and
+        dst_nas_server are None.
+
+        :param remote_system: a `UnityRemoteSystem` object used to scope the
+            replication sessions by this remote system.
+        :param dst_nas_server: limit the replication sessions with the
+            destination nas server.
+        """
+        rep_sessions = UnityReplicationSessionList.get(
+            self._cli, src_resource_id=self.get_id(),
+            dst_resource_id=dst_nas_server and dst_nas_server.get_id(),
+            remote_system=remote_system,
+        )
+        for session in rep_sessions:
+            session.delete()
 
     def modify(self, name=None, sp=None, is_replication_destination=None,
                is_backup_only=None, current_unix_directory_service=None,

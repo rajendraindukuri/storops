@@ -30,7 +30,7 @@ import storops.unity.resource.nfs_share
 import storops.unity.resource.cifs_share
 from storops.unity.resource import UnityResource, UnityResourceList
 from storops.unity.resource.replication_session import \
-    UnityReplicationSession, UnityResourceConfig
+    UnityReplicationSession, UnityResourceConfig, UnityReplicationSessionList
 from storops.unity.resource.snap import UnitySnap, UnitySnapList
 from storops.unity.resource.storage_resource import UnityStorageResource
 
@@ -217,6 +217,26 @@ class UnityFileSystem(UnityResource):
             self._cli, self.storage_resource.get_id(),
             dst_resource, max_time_out_of_sync,
             remote_system=remote_system, name=replication_name)
+
+    def delete_replication(self, remote_system=None, dst_filesystem=None):
+        """Deletes the replication sessions with this filesystem as source.
+
+        All replication sessions will be deleted if both remote_system and
+        dst_filesystem are None.
+
+        :param remote_system: a `UnityRemoteSystem` object used to scope the
+            replication sessions by this remote system.
+        :param dst_filesystem: scope the replication sessions by the
+            destination filesystem.
+        """
+        rep_sessions = UnityReplicationSessionList.get(
+            self._cli, src_resource_id=self.storage_resource.get_id(),
+            dst_resource_id=(dst_filesystem
+                             and dst_filesystem.storage_resource.get_id()),
+            remote_system=remote_system,
+        )
+        for session in rep_sessions:
+            session.delete()
 
 
 class UnityFileSystemList(UnityResourceList):
