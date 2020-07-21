@@ -217,23 +217,33 @@ class UnityNasServer(UnityResource):
             dst_resource_element_configs=dst_resource_element_configs
         )
 
-    def delete_replication(self, remote_system=None, dst_nas_server=None):
+    def get_replications(self, remote_system=None, dst_nas_server=None):
+        """Returns replication sessions with this nas server as source.
+
+        :param remote_system: a `UnityRemoteSystem` object to scope the
+            replication sessions by the remote system.
+        :param dst_nas_server: a `UnityNasServer` object to scope the
+            replication sessions by the destination nas server.
+        """
+        return UnityReplicationSessionList.get(
+            self._cli, src_resource_id=self.get_id(),
+            dst_resource_id=dst_nas_server and dst_nas_server.get_id(),
+            remote_system=remote_system,
+        )
+
+    def delete_replications(self, remote_system=None, dst_nas_server=None):
         """Deletes the replication sessions with this nas server as source.
 
         All replication sessions will be deleted if both remote_system and
         dst_nas_server are None.
 
-        :param remote_system: a `UnityRemoteSystem` object used to scope the
-            replication sessions by this remote system.
-        :param dst_nas_server: limit the replication sessions with the
-            destination nas server.
+        :param remote_system: a `UnityRemoteSystem` object to scope the
+            replication sessions by the remote system.
+        :param dst_nas_server: a `UnityNasServer` object to scope the
+            replication sessions by the destination nas server.
         """
-        rep_sessions = UnityReplicationSessionList.get(
-            self._cli, src_resource_id=self.get_id(),
-            dst_resource_id=dst_nas_server and dst_nas_server.get_id(),
-            remote_system=remote_system,
-        )
-        for session in rep_sessions:
+        for session in self.get_replications(remote_system=remote_system,
+                                             dst_nas_server=dst_nas_server):
             session.delete()
 
     def modify(self, name=None, sp=None, is_replication_destination=None,

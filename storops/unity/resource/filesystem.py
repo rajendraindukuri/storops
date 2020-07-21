@@ -218,24 +218,34 @@ class UnityFileSystem(UnityResource):
             dst_resource, max_time_out_of_sync,
             remote_system=remote_system, name=replication_name)
 
-    def delete_replication(self, remote_system=None, dst_filesystem=None):
+    def get_replications(self, remote_system=None, dst_filesystem=None):
+        """Returns replication sessions with this filesystem as source.
+
+        :param remote_system: a `UnityRemoteSystem` object used to scope the
+            replication sessions by the remote system.
+        :param dst_filesystem: a `UnityFileSystem` object used to scope the
+            replication sessions by the destination filesystem.
+        """
+        return UnityReplicationSessionList.get(
+            self._cli, src_resource_id=self.storage_resource.get_id(),
+            dst_resource_id=(dst_filesystem
+                             and dst_filesystem.storage_resource.get_id()),
+            remote_system=remote_system,
+        )
+
+    def delete_replications(self, remote_system=None, dst_filesystem=None):
         """Deletes the replication sessions with this filesystem as source.
 
         All replication sessions will be deleted if both remote_system and
         dst_filesystem are None.
 
         :param remote_system: a `UnityRemoteSystem` object used to scope the
-            replication sessions by this remote system.
-        :param dst_filesystem: scope the replication sessions by the
-            destination filesystem.
+            replication sessions by the remote system.
+        :param dst_filesystem: a `UnityFileSystem` object used to scope the
+            replication sessions by the destination filesystem.
         """
-        rep_sessions = UnityReplicationSessionList.get(
-            self._cli, src_resource_id=self.storage_resource.get_id(),
-            dst_resource_id=(dst_filesystem
-                             and dst_filesystem.storage_resource.get_id()),
-            remote_system=remote_system,
-        )
-        for session in rep_sessions:
+        for session in self.get_replications(remote_system=remote_system,
+                                             dst_filesystem=dst_filesystem):
             session.delete()
 
 

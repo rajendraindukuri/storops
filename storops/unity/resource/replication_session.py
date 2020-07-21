@@ -17,6 +17,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from storops.unity import enums
 from storops.unity.resource import UnityResource, UnityResourceList, \
     UnityAttributeResource
 
@@ -118,8 +119,7 @@ class UnityReplicationSession(UnityResource):
                replicate_existing_snaps=None, remote_system=None,
                src_spa_interface=None, src_spb_interface=None,
                dst_spa_interface=None, dst_spb_interface=None):
-        """
-        Creates a replication session.
+        """Creates a replication session.
 
         :param cli: the rest cli.
         :param src_resource_id: id of the replication source, could be
@@ -186,8 +186,8 @@ class UnityReplicationSession(UnityResource):
             daily_snap_replication_policy=None, replicate_existing_snaps=None,
             no_async_snap_replication=None,
     ):
-        """
-        Create a replication session along with destination resource
+        """Create a replication session along with destination resource
+
         provisioning.
 
         :param cli: the rest cli.
@@ -268,8 +268,7 @@ class UnityReplicationSession(UnityResource):
                daily_snap_replication_policy=None,
                src_spa_interface=None, src_spb_interface=None,
                dst_spa_interface=None, dst_spb_interface=None):
-        """
-        Modifies properties of a replication session.
+        """Modifies properties of a replication session.
 
         :param max_time_out_of_sync: same as the one in `create` method.
         :param name: same as the one in `create` method.
@@ -298,8 +297,7 @@ class UnityReplicationSession(UnityResource):
     def resume(self, force_full_copy=None,
                src_spa_interface=None, src_spb_interface=None,
                dst_spa_interface=None, dst_spb_interface=None):
-        """
-        Resumes a replication session.
+        """Resumes a replication session.
 
         This can be applied on replication session when it's operational status
         is reported as Failed over, or Paused.
@@ -324,8 +322,7 @@ class UnityReplicationSession(UnityResource):
         return resp
 
     def pause(self):
-        """
-        Pauses a replication session.
+        """Pauses a replication session.
 
         This can be applied on replication session when in `OK` state.
         """
@@ -334,8 +331,7 @@ class UnityReplicationSession(UnityResource):
         return resp
 
     def sync(self):
-        """
-        Syncs a replication session.
+        """Syncs a replication session.
 
         This can be applied to initiate a sync on demand independent of type of
         replication session - auto or manual sync.
@@ -345,8 +341,7 @@ class UnityReplicationSession(UnityResource):
         return resp
 
     def failover(self, sync=None, force=None):
-        """
-        Fails over a replication session.
+        """Fails over a replication session.
 
         :param sync: True - sync the source and destination resources before
             failing over the asynchronous replication session or keep them in
@@ -363,8 +358,7 @@ class UnityReplicationSession(UnityResource):
         return resp
 
     def failback(self, force_full_copy=None):
-        """
-        Fails back a replication session.
+        """Fails back a replication session.
 
         This can be applied on a replication session that is failed over. Fail
         back will synchronize the changes done to original destination back to
@@ -380,6 +374,31 @@ class UnityReplicationSession(UnityResource):
         resp = self.action('failback', **req_body)
         resp.raise_if_err()
         return resp
+
+    @property
+    def is_in_sync(self):
+        """Returns True if the replication session is in-sync."""
+        _enum = enums.ReplicationOpStatusEnum
+        if self.status not in [
+            # Some obvious status indicating it is in sync.
+            _enum.ACTIVE,
+            _enum.IDLE,
+            _enum.IDLE_MIXED,
+            _enum.OK,
+            _enum.AUTO_SYNC_CONFIGURED,
+            _enum.AUTO_SYNC_CONFIGURED_MIXED,
+        ]:
+            return False
+
+        _enum = enums.ReplicationSessionSyncStateEnum
+        if self.sync_state not in [
+            # Some obvious sync state indicating it is in sync.
+            _enum.IDLE,
+            _enum.IN_SYNC,
+            _enum.CONSISTENT,
+        ]:
+            return False
+        return True
 
 
 class UnityReplicationSessionList(UnityResourceList):

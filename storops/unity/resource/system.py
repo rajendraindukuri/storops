@@ -578,9 +578,18 @@ class UnitySystem(UnitySingletonResource):
             vlan_id=vlan_id)
 
     def get_replication_session(self, _id=None, name=None,
-                                src_sys_name=None, src_resource_id=None,
-                                dst_sys_name=None, dst_resource_id=None,
-                                remote_system=None, **filters):
+                                src_resource_id=None, dst_resource_id=None,
+                                **filters):
+        # This function is deprecated, use get_replication_sessions.
+        return self._get_unity_rsc(
+            UnityReplicationSessionList, _id=_id, name=name,
+            src_resource_id=src_resource_id, dst_resource_id=dst_resource_id,
+            **filters)
+
+    def get_replication_sessions(self, _id=None, name=None,
+                                 src_sys_name=None, src_resource_id=None,
+                                 dst_sys_name=None, dst_resource_id=None,
+                                 remote_system=None, **filters):
         # remote_system should be a UnityRemoteSystem instance.
         return self._get_unity_rsc(
             UnityReplicationSessionList, _id=_id, name=name,
