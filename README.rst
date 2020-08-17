@@ -101,40 +101,40 @@ Feature List
         - create/delete DNS
     - supported metrics
         - VNXStorageProcessor
-            - read/write/total IOPS
-            - read/write/total MBPS
-            - read/write size KB
+            - `read_iops`/`write_iops`/`total_iops`: read/write/total IOPS
+            - `read_mbps`/`write_mbps`/`total_mbps`: read/write/total MBPS
+            - `read_size_kb`/`write_size_kb`: read/write size KB
         - VNXLun
-            - read/write/total IOPS
-                - read/write IOPS of SPA
-                - read/write IOPS of SPB
-            - read/write/total MBPS
-                - read/write MBPS of SPA
-                - read/write MBPS of SPB
-            - implicit/explicit trespasses per second
-                - implicit/explicit trespasses per second of SPA
-                - implicit/explicit trespasses per second of SPB
-            - utilization
-                - utilization of SPA
-                - utilization of SPB
-            - read/write size KB
+            - `read_iops`/`write_iops`/`total_iops`: read/write/total IOPS
+                - `read_iops_sp_a`/`write_iops_sp_b`: read/write IOPS of SPA
+                - `read_iops_sp_b`/`write_iops_sp_b`: read/write IOPS of SPB
+            - `read_mbps`/`write_mbps`/`total_mbps`: read/write/total MBPS
+                - `read_mbps_sp_a`/`write_mbps_sp_a`: read/write MBPS of SPA
+                - `read_mbps_sp_b`/`write_mbps_sp_b`: read/write MBPS of SPB
+            - `implicit_trespasses_ps`/`explicit_trespasses_ps`: implicit/explicit trespasses per second
+                - `implicit_trespasses_ps_sp_a`/`explicit_trespasses_ps_sp_a`: implicit/explicit trespasses per second of SPA
+                - `implicit_trespasses_ps_sp_b`/`explicit_trespasses_ps_sp_b`: implicit/explicit trespasses per second of SPB
+            - `utilization`: utilization
+                - `utilization_sp_a`: utilization of SPA
+                - `utilization_sp_b`: utilization of SPB
+            - `read_size_kb`/`write_size_kb`: read/write size KB
         - VNXDisk
-            - read/write/total IOPS
-            - read/write/total MBPS
-            - utilization
-            - read/write size KB
+            - `read_iops`/`write_iops`/`total_iops`: read/write/total IOPS
+            - `read_mbps`/`write_mbps`/`total_mbps`: read/write/total MBPS
+            - `utilization`: utilization
+            - `read_size_kb`/`write_size_kb`: read/write size KB
         - VNXSPPort
-            - read/write/total IOPS
-            - read/write/total MBPS
-            - read/write size KB
+            - `read_iops`/`write_iops`/`total_iops`: read/write/total IOPS
+            - `read_mbps`/`write_mbps`/`total_mbps`: read/write/total MBPS
+            - `read_size_kb`/`write_size_kb`: read/write size KB
         - VNXStorageGroup
-            - read/write/total IOPS
-            - read/write/total MBPS
-            - read/write size KB
+            - `read_iops`/`write_iops`/`total_iops`: read/write/total IOPS
+            - `read_mbps`/`write_mbps`/`total_mbps`: read/write/total MBPS
+            - `read_size_kb`/`write_size_kb`: read/write size KB
         - VNXStoragePool
-            - read/write/total IOPS
-            - read/write/total MBPS
-            - read/write size KB
+            - `read_iops`/`write_iops`/`total_iops`: read/write/total IOPS
+            - `read_mbps`/`write_mbps`/`total_mbps`: read/write/total MBPS
+            - `read_size_kb`/`write_size_kb`: read/write size KB
 - Manage Unity System
     - supported resources
         - show system properties
@@ -426,6 +426,27 @@ Remove a Resource
 
 Getting metrics
 ```````````````
+- VNX
+
+.. code-block:: python
+
+    >>> from storops import VNXSystem
+    >>> vnx = VNXSystem('<management ip>', '<user>', '<password>')
+    # Enable metric query
+    >>> vnx.enable_perf_stats()
+    # Get iops for Storage Processor
+    >>> sp = vnx.get_sp()[0] 
+    >>> sp.read_iops
+    0.0
+    >>> sp.write_iops
+    0.6666666666666666
+    >>> sp.read_size_kb
+    0.0
+    >>> sp.write_size_kb
+    4.2250000000000005
+
+    
+- Unity
 
 .. code-block:: python
 
