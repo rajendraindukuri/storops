@@ -581,6 +581,8 @@ class UnitySystem(UnitySingletonResource):
                                 src_resource_id=None, dst_resource_id=None,
                                 **filters):
         # This function is deprecated, use get_replication_sessions.
+        LOG.warning('get_replication_session is deprecated. '
+                    'Use get_replication_sessions.')
         return self._get_unity_rsc(
             UnityReplicationSessionList, _id=_id, name=name,
             src_resource_id=src_resource_id, dst_resource_id=dst_resource_id,
