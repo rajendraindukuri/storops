@@ -165,14 +165,11 @@ class UnityNasServer(UnityResource):
             self._cli, self.get_id(), dst_nas_server_id, max_time_out_of_sync,
             name=replication_name, remote_system=remote_system)
 
-    def replicate_with_dst_resource_provisioning(self, max_time_out_of_sync,
-                                                 dst_pool_id,
-                                                 dst_nas_server_name=None,
-                                                 remote_system=None,
-                                                 replication_name=None,
-                                                 dst_sp=None,
-                                                 is_backup_only=None,
-                                                 filesystems=None):
+    def replicate_with_dst_resource_provisioning(
+            self, max_time_out_of_sync, dst_pool_id, dst_nas_server_name=None,
+            remote_system=None, replication_name=None, dst_sp=None,
+            is_backup_only=None, filesystems=None,
+            replicate_existing_snaps=None):
         """
         Creates a replication session with destination nas server provisioning.
 
@@ -192,6 +189,10 @@ class UnityNasServer(UnityResource):
         :param filesystems: list of `UnityFileSystem` object. These existing
             filesystems in this nas server will be replicated to the
             destination with the nas server.
+        :param replicate_existing_snaps: Whether or not to replicate snapshots
+            already existing on the resource (one-time option at session
+            creation time). Each replica of these snaps will inherit the source
+            snap retention policy.
         :return: created replication session.
         """
         if remote_system and (dst_sp is None):
@@ -204,17 +205,20 @@ class UnityNasServer(UnityResource):
             replication_resource_type=(
                 ReplicationEndpointResourceTypeEnum.NASSERVER))
 
-        dst_resource_element_configs = [
-            UnityResourceConfig.to_embedded(
-                name=fs.name, pool_id=dst_pool_id,
-                src_id=fs.storage_resource.get_id(),
-                is_thin_enabled=fs.is_thin_enabled, size=fs.size_total,
-                tiering_policy=fs.tiering_policy)
-            for fs in filesystems]
+        dst_resource_element_configs = None
+        if filesystems:
+            dst_resource_element_configs = [
+                UnityResourceConfig.to_embedded(
+                    name=fs.name, pool_id=dst_pool_id,
+                    src_id=fs.storage_resource.get_id(),
+                    is_thin_enabled=fs.is_thin_enabled, size=fs.size_total,
+                    tiering_policy=fs.tiering_policy)
+                for fs in filesystems]
         return UnityReplicationSession.create_with_dst_resource_provisioning(
             self._cli, self.get_id(), dst_resource, max_time_out_of_sync,
             remote_system=remote_system, name=replication_name,
-            dst_resource_element_configs=dst_resource_element_configs
+            dst_resource_element_configs=dst_resource_element_configs,
+            replicate_existing_snaps=replicate_existing_snaps
         )
 
     def get_replications(self, remote_system=None, dst_nas_server=None):
