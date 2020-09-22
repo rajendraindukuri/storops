@@ -28,11 +28,50 @@ from storops.lib.version import version
 from storops.unity import enums
 from storops.unity.enums import FilesystemSnapAccessTypeEnum, SnapStateEnum, \
     SnapAccessLevelEnum
-from storops.unity.resource import UnityResource, UnityResourceList
+from storops.unity.resource import UnityResource, UnityResourceList, \
+    UnityAttributeResource
 
 __author__ = 'Cedric Zhuang'
 
 log = logging.getLogger(__name__)
+
+
+class UnitySnapRemoteRetentionPolicyParam(UnityAttributeResource):
+    def __init__(self, remote_system=None,
+                 is_remote_retention_same_as_source=None,
+                 is_remote_auto_delete=None, remote_retention_duration=None):
+        """Constructs a Unity `snapRemoteRetentionPolicyParam` object.
+
+        :param remote_system: the remote system to which these retention
+            settings are to be applied.
+        :type remote_system: :class:`UnityRemoteSystem`.
+        :param is_remote_retention_same_as_source: whether the remote policy is
+            same as replication session source.
+        :param is_remote_auto_delete: whether this snapshot can be
+            automatically deleted by the system per threshold settings on the
+            destination. `True` - Snapshot can be automatically deleted by the
+            system per threshold settings on the destination. `False` -
+            Snapshot cannot be deleted automatically on the destination.
+            (Applies when replicating a snap and
+            `is_remote_retention_same_as_source` attributes is false.)
+        :param remote_retention_duration: period in seconds specifying how long
+            to retain the replicated snapshot on the destination. When the
+            retention period expires, the remote system will delete the
+            replicated snapshot. The default retention period is seven days.
+        """
+        self.remote_system = remote_system
+        self.is_remote_retention_same_as_source = (
+            is_remote_retention_same_as_source)
+        self.is_remote_auto_delete = is_remote_auto_delete
+        self.remote_retention_duration = remote_retention_duration
+
+    def to_embedded(self):
+        return dict(
+            remoteSystem=self.remote_system,
+            isRemoteRetentionSameAsSource=
+            self.is_remote_retention_same_as_source,
+            isRemoteAutoDelete=self.is_remote_auto_delete,
+            remoteRetentionDuration=self.remote_retention_duration)
 
 
 class UnitySnap(UnityResource):
@@ -40,19 +79,50 @@ class UnitySnap(UnityResource):
     def create(cls, cli, storage_resource, name=None,
                description=None, is_auto_delete=None,
                retention_duration=None, is_read_only=None,
-               fs_access_type=None):
+               fs_access_type=None, replicated_to=None):
+        """Creates a snapshot for storage resource.
+
+        :param cli: the client to execute the request.
+        :param storage_resource: the storage resource to create the snapshot,
+            could be the storage resource of a Unity `lun` or `filesystem`.
+        :param name: the name for the new snapshot.
+        :param description: the description for the new snapshot.
+        :param is_auto_delete: whether to delete the snapshot automatically.
+        :param retention_duration: how long (in seconds) to keep the snapshot.
+            (Can be specified only if auto delete is set to false).
+        :param is_read_only: whether the new snapshot is read-only.
+        :param fs_access_type: whether the new snapshot should be created with
+            checkpoint or protocol type access (file system snaps only).
+        :type fs_access_type: :class:`FilesystemSnapAccessTypeEnum`.
+        :param replicated_to: which remote systems the new snapshot is
+            replicated to.
+        :type replicated_to: a list of :class:`UnityRemoteSystem`.
+        :return: the newly created snapshot.
+        """
         FilesystemSnapAccessTypeEnum.verify(fs_access_type)
         sr_clz = storops.unity.resource.storage_resource.UnityStorageResource
         sr = sr_clz.get(cli, storage_resource)
 
-        resp = cli.post(cls().resource_class,
-                        storageResource=sr,
-                        name=name,
-                        description=description,
-                        isAutoDelete=is_auto_delete,
-                        retentionDuration=retention_duration,
-                        isReadOnly=is_read_only,
-                        filesystemAccessType=fs_access_type)
+        req_params = dict(
+            storageResource=sr,
+            name=name,
+            description=description,
+            isAutoDelete=is_auto_delete,
+            retentionDuration=retention_duration,
+            isReadOnly=is_read_only,
+            filesystemAccessType=fs_access_type)
+
+        if replicated_to:
+            req_params.update({
+                'markForReplication': True,
+                'snapRemoteRetentionPolicies': [
+                    UnitySnapRemoteRetentionPolicyParam(
+                        remote_system=remote_system,
+                        is_remote_retention_same_as_source=True
+                    ).to_embedded() for remote_system in replicated_to]
+            })
+
+        resp = cli.post(cls().resource_class, **req_params)
         resp.raise_if_err()
         return cls(_id=resp.resource_id, cli=cli)
 

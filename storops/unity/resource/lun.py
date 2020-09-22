@@ -387,14 +387,27 @@ class UnityLun(UnityResource):
         return resp
 
     def create_snap(self, name=None, description=None, is_auto_delete=None,
-                    retention_duration=None):
+                    retention_duration=None, replicated_to=None):
+        """Creates a snapshot for this lun.
+
+        :param name: the name for the new snapshot.
+        :param description: the description for the new snapshot.
+        :param is_auto_delete: whether to delete the snapshot automatically.
+        :param retention_duration: how long (in seconds) to keep the snapshot.
+            (Can be specified only if auto delete is set to false).
+        :param replicated_to: which remote systems the new snapshot is
+            replicated to.
+        :type replicated_to: a list of :class:`UnityRemoteSystem`.
+        :return: the newly created snapshot.
+        """
         if self.is_cg_member:
             raise UnityCGMemberActionNotSupportError()
         return UnitySnap.create(self._cli, self.storage_resource,
                                 name=name, description=description,
                                 is_auto_delete=is_auto_delete,
                                 retention_duration=retention_duration,
-                                is_read_only=None, fs_access_type=None)
+                                is_read_only=None, fs_access_type=None,
+                                replicated_to=replicated_to)
 
     @version(">=4.2")
     def thin_clone(self, name, io_limit_policy=None, description=None):

@@ -92,6 +92,8 @@ class ReplicationTypeEnum(UnityEnum):
     NONE = (0, 'No Replication')
     LOCAL = (1, 'Local Replication')
     REMOTE = (2, 'Remote Replication')
+    MIXED = (3, 'More than one async replication session involved resources '
+                'on local system')
 
 
 class NasServerUnixDirectoryServiceEnum(UnityEnum):

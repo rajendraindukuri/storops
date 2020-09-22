@@ -48,6 +48,17 @@ class UnityFileInterface(UnityResource):
         resp.raise_if_err()
         return cls(_id=resp.resource_id, cli=cli)
 
+    def modify(self, ip_port=None, ip=None, netmask=None,
+               v6_prefix_length=None, gateway=None, vlan_id=None):
+        req_body = self._cli.make_body(ipPort=ip_port, ipAddress=ip,
+                                       netmask=netmask,
+                                       v6PrefixLength=v6_prefix_length,
+                                       gateway=gateway, vlanId=vlan_id)
+
+        resp = self.action('modify', **req_body)
+        resp.raise_if_err()
+        return resp
+
 
 class UnityFileInterfaceList(UnityResourceList):
     @classmethod

@@ -139,7 +139,23 @@ class UnityFileSystem(UnityResource):
     def create_snap(self, name=None,
                     description=None, is_auto_delete=None,
                     retention_duration=None, is_read_only=None,
-                    fs_access_type=None):
+                    fs_access_type=None, replicated_to=None):
+        """Creates a snapshot for this filesystem.
+
+        :param name: the name for the new snapshot.
+        :param description: the description for the new snapshot.
+        :param is_auto_delete: whether to delete the snapshot automatically.
+        :param retention_duration: how long (in seconds) to keep the snapshot.
+            (Can be specified only if auto delete is set to false).
+        :param is_read_only: whether the new snapshot is read-only.
+        :param fs_access_type: whether the new snapshot should be created with
+            checkpoint or protocol type access (file system snaps only).
+        :type fs_access_type: :class:`FilesystemSnapAccessTypeEnum`.
+        :param replicated_to: which remote systems the new snapshot is
+            replicated to.
+        :type replicated_to: a list of :class:`UnityRemoteSystem`.
+        :return: the newly created snapshot.
+        """
         return UnitySnap.create(cli=self._cli,
                                 storage_resource=self.storage_resource,
                                 name=name,
@@ -147,7 +163,8 @@ class UnityFileSystem(UnityResource):
                                 is_auto_delete=is_auto_delete,
                                 retention_duration=retention_duration,
                                 is_read_only=is_read_only,
-                                fs_access_type=fs_access_type)
+                                fs_access_type=fs_access_type,
+                                replicated_to=replicated_to)
 
     @property
     def snapshots(self):
