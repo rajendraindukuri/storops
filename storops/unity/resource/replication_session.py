@@ -184,7 +184,7 @@ class UnityReplicationSession(UnityResource):
             dst_resource_element_configs=None, auto_initiate=None,
             hourly_snap_replication_policy=None,
             daily_snap_replication_policy=None, replicate_existing_snaps=None,
-            no_async_snap_replication=None,
+            no_async_snap_replication=None, reuse_dst_resource=None,
     ):
         """Create a replication session along with destination resource
 
@@ -230,6 +230,9 @@ class UnityReplicationSession(UnityResource):
             enabled in asynchronous replication session. When enabled, snap
             replication is controlled by snap replication policy setting or
             user action.
+        :param reuse_dst_resource: Reuse destination resource when resource
+            already exist, if resource not exist, provision destination
+            resource.
         :return: the newly created replication session.
         """
 
@@ -248,6 +251,7 @@ class UnityReplicationSession(UnityResource):
             dailySnapReplicationPolicy=daily_snap_replication_policy,
             replicateExistingSnaps=replicate_existing_snaps,
             noAsyncSnapReplication=no_async_snap_replication,
+            reuseDstResource=reuse_dst_resource,
         )
 
         resp = cli.type_action(

@@ -169,7 +169,7 @@ class UnityNasServer(UnityResource):
             self, max_time_out_of_sync, dst_pool_id, dst_nas_server_name=None,
             remote_system=None, replication_name=None, dst_sp=None,
             is_backup_only=None, filesystems=None,
-            replicate_existing_snaps=None):
+            replicate_existing_snaps=None, reuse_dst_resource=None):
         """
         Creates a replication session with destination nas server provisioning.
 
@@ -193,6 +193,9 @@ class UnityNasServer(UnityResource):
             already existing on the resource (one-time option at session
             creation time). Each replica of these snaps will inherit the source
             snap retention policy.
+        :param reuse_dst_resource: Reuse destination resource when resource
+            already exist, if resource not exist, provision destination
+            resource.
         :return: created replication session.
         """
         if remote_system and (dst_sp is None):
@@ -218,7 +221,8 @@ class UnityNasServer(UnityResource):
             self._cli, self.get_id(), dst_resource, max_time_out_of_sync,
             remote_system=remote_system, name=replication_name,
             dst_resource_element_configs=dst_resource_element_configs,
-            replicate_existing_snaps=replicate_existing_snaps
+            replicate_existing_snaps=replicate_existing_snaps,
+            reuse_dst_resource=reuse_dst_resource,
         )
 
     def get_replications(self, remote_system=None, dst_nas_server=None):
