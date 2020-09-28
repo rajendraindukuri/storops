@@ -195,7 +195,7 @@ class UnityNasServer(UnityResource):
             snap retention policy.
         :param reuse_dst_resource: Reuse destination resource when resource
             already exist, if resource not exist, provision destination
-            resource.
+            resource. Will be ignored for OE prior to 5.1.0.
         :return: created replication session.
         """
         if remote_system and (dst_sp is None):

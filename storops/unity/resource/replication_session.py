@@ -17,6 +17,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from storops.lib.version import version
 from storops.unity import enums
 from storops.unity.resource import UnityResource, UnityResourceList, \
     UnityAttributeResource
@@ -235,7 +236,6 @@ class UnityReplicationSession(UnityResource):
             resource.
         :return: the newly created replication session.
         """
-
         req_body = cli.make_body(
             srcResourceId=src_resource_id,
             dstResourceConfig=dst_resource_config,
@@ -251,8 +251,24 @@ class UnityReplicationSession(UnityResource):
             dailySnapReplicationPolicy=daily_snap_replication_policy,
             replicateExistingSnaps=replicate_existing_snaps,
             noAsyncSnapReplication=no_async_snap_replication,
-            reuseDstResource=reuse_dst_resource,
         )
+
+        @version('<5.1.0')
+        def handle_incompatible_parameters(_cli, _req_body):
+            # cli is needed for checking required version.
+            if reuse_dst_resource is not None:
+                log.warning('reuseDstResource=%s is ignored in the OE prior '
+                            'to 5.1.0.', reuse_dst_resource)
+            return _req_body
+
+        @version('>=5.1.0')
+        def handle_incompatible_parameters(_cli, _req_body):
+            # cli is needed for checking required version.
+            if reuse_dst_resource is not None:
+                _req_body['reuseDstResource'] = reuse_dst_resource
+            return _req_body
+
+        req_body = handle_incompatible_parameters(cli, req_body)
 
         resp = cli.type_action(
             cls().resource_class,
