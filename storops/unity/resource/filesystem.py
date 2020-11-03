@@ -17,22 +17,24 @@ from __future__ import unicode_literals
 
 import logging
 
-from storops.lib.common import supplement_filesystem
+import storops.unity.resource.cifs_share
+import storops.unity.resource.nas_server
+import storops.unity.resource.nfs_share
+import storops.unity.resource.pool
 from storops.exception import UnityResourceNotFoundError, \
     UnityCifsServiceNotEnabledError, UnityShareShrinkSizeTooLargeError, \
     UnityShareShrinkSizeTooSmallError, UnityLocalReplicationFsNameNotSameError
+from storops.lib.common import supplement_filesystem
+from storops.lib.version import version
 from storops.unity.enums import FSSupportedProtocolEnum, TieringPolicyEnum, \
-    SnapStateEnum
-
-import storops.unity.resource.nas_server
-import storops.unity.resource.pool
-import storops.unity.resource.nfs_share
-import storops.unity.resource.cifs_share
+    SnapStateEnum, AccessPolicyEnum, FSLockingPolicyEnum
 from storops.unity.resource import UnityResource, UnityResourceList
 from storops.unity.resource.replication_session import \
     UnityReplicationSession, UnityResourceConfig
 from storops.unity.resource.snap import UnitySnap, UnitySnapList
 from storops.unity.resource.storage_resource import UnityStorageResource
+from storops.unity.resp import RestResponse
+from storops.unity.client import UnityClient
 
 __author__ = 'Jay Xu'
 
@@ -41,9 +43,10 @@ log = logging.getLogger(__name__)
 
 class UnityFileSystem(UnityResource):
     @classmethod
-    def create(cls, cli, pool, nas_server, name, size,
-               proto=None, is_thin=None,
-               tiering_policy=None, user_cap=False):
+    def create(cls, cli, pool, nas_server, name, size, proto=None,
+               is_thin=None, tiering_policy=None, user_cap=False,
+               is_compression=None, access_policy=None,
+               locking_policy=None, description=None):
         pool_clz = storops.unity.resource.pool.UnityPool
         nas_server_clz = storops.unity.resource.nas_server.UnityNasServer
 
@@ -52,29 +55,62 @@ class UnityFileSystem(UnityResource):
 
         pool = pool_clz.get(cli, pool)
         nas_server = nas_server_clz.get(cli, nas_server)
-        FSSupportedProtocolEnum.verify(proto)
-        TieringPolicyEnum.verify(tiering_policy)
         size = supplement_filesystem(size, user_cap)
 
-        req_body = {
-            'name': name,
-            'fsParameters': {
-                'pool': pool,
-                'nasServer': nas_server,
-                'supportedProtocols': proto,
-                'isThinEnabled': is_thin,
-                'size': size,
-                'fastVPParameters': {
-                    'tieringPolicy': tiering_policy
-                }
-            },
-        }
+        fs_param = cls.prepare_fs_parameters(
+            pool=pool, nas_server=nas_server,
+            supported_protocols=proto,
+            is_thin_enabled=is_thin,
+            size=size,
+            tiering_policy=tiering_policy,
+            is_compression=is_compression,
+            access_policy=access_policy,
+            locking_policy=locking_policy)
+
+        req_body = cli.make_body(allow_empty=True, name=name,
+                                 description=description,
+                                 fsParameters=fs_param)
         resp = cli.type_action(UnityStorageResource().resource_class,
                                'createFilesystem',
                                **req_body)
         resp.raise_if_err()
         sr = UnityStorageResource(_id=resp.resource_id, cli=cli)
         return sr.filesystem
+
+    def modify(self, size=None, is_thin=None, tiering_policy=None,
+               user_cap=False, is_compression=None, access_policy=None,
+               locking_policy=None, description=None,
+               cifs_fs_parameters=None):
+        sr = self.storage_resource
+        if sr is None:
+            raise ValueError('storage resource for filesystem {} not found.'
+                             .format(self.name))
+
+        if size:
+            size = supplement_filesystem(size, user_cap)
+
+        fs_param = self.prepare_fs_parameters(
+            is_thin_enabled=is_thin, size=size,
+            tiering_policy=tiering_policy,
+            is_compression=is_compression,
+            access_policy=access_policy,
+            locking_policy=locking_policy)
+
+        params = {}
+        if fs_param:
+            params['fsParameters'] = fs_param
+        if cifs_fs_parameters:
+            params['cifsFsParameters'] = cifs_fs_parameters
+        if description:
+            params['description'] = description
+
+        if not params:
+            return RestResponse('', self._cli)
+
+        req_body = self._cli.make_body(allow_empty=True, **params)
+        resp = sr.modify_fs(**req_body)
+        resp.raise_if_err()
+        return resp
 
     @property
     def first_available_cifs_server(self):
@@ -126,15 +162,55 @@ class UnityFileSystem(UnityResource):
         resp.raise_if_err()
         return resp
 
-    def create_nfs_share(self, name, path=None, share_access=None):
+    def create_nfs_share(self, name, path=None, share_access=None,
+                         min_security=None, no_access_hosts=None,
+                         read_only_hosts=None, read_write_hosts=None,
+                         root_access_hosts=None,
+                         read_only_root_access_hosts=None,
+                         no_access_hosts_string=None,
+                         read_only_hosts_string=None,
+                         read_write_hosts_string=None,
+                         read_only_root_hosts_string=None,
+                         root_access_hosts_string=None,
+                         anonymous_uid=None, anonymous_gid=None,
+                         export_option=None, description=None):
         clz = storops.unity.resource.nfs_share.UnityNfsShare
-        return clz.create(self._cli, name=name, fs=self,
-                          path=path, share_access=share_access)
+        return clz.create(
+            self._cli, name=name, fs=self,
+            path=path, share_access=share_access,
+            min_security=min_security,
+            no_access_hosts=no_access_hosts,
+            read_only_hosts=read_only_hosts,
+            read_write_hosts=read_write_hosts,
+            root_access_hosts=root_access_hosts,
+            read_only_root_access_hosts=read_only_root_access_hosts,
+            no_access_hosts_string=no_access_hosts_string,
+            read_only_hosts_string=read_only_hosts_string,
+            read_write_hosts_string=read_write_hosts_string,
+            read_only_root_hosts_string=read_only_root_hosts_string,
+            root_access_hosts_string=root_access_hosts_string,
+            anonymous_uid=anonymous_uid,
+            anonymous_gid=anonymous_gid,
+            export_option=export_option,
+            description=description)
 
-    def create_cifs_share(self, name, path=None, cifs_server=None):
+    def create_cifs_share(self, name, path=None, cifs_server=None,
+                          is_read_only=None, is_encryption_enabled=None,
+                          is_con_avail_enabled=None, is_abe_enabled=None,
+                          is_branch_cache_enabled=None,
+                          offline_availability=None,
+                          umask=None, description=None):
         clz = storops.unity.resource.cifs_share.UnityCifsShare
-        return clz.create(self._cli, name=name, fs=self,
-                          path=path, cifs_server=cifs_server)
+        return clz.create(
+            self._cli, name=name, fs=self,
+            path=path, cifs_server=cifs_server,
+            is_read_only=is_read_only,
+            is_encryption_enabled=is_encryption_enabled,
+            is_con_avail_enabled=is_con_avail_enabled,
+            is_abe_enabled=is_abe_enabled,
+            is_branch_cache_enabled=is_branch_cache_enabled,
+            offline_availability=offline_availability,
+            umask=umask, description=description)
 
     def create_snap(self, name=None,
                     description=None, is_auto_delete=None,
@@ -217,6 +293,61 @@ class UnityFileSystem(UnityResource):
             self._cli, self.storage_resource.get_id(),
             dst_resource, max_time_out_of_sync,
             remote_system=remote_system, name=replication_name)
+
+    @staticmethod
+    def prepare_fs_parameters(**kwargs):
+        @version('<4.3')
+        def make_compression_body(is_compression=None):
+            return UnityClient.make_body(
+                allow_empty=True, isCompressionEnabled=is_compression)
+
+        @version('>=4.3')  # noqa
+        def make_compression_body(is_compression=None):
+            return UnityClient.make_body(
+                allow_empty=True, isDataReductionEnabled=is_compression)
+
+        access_policy = kwargs.get('access_policy')
+        locking_policy = kwargs.get('locking_policy')
+        supported_protocols = kwargs.get('supported_protocols')
+        tiering_policy = kwargs.get('tiering_policy')
+
+        AccessPolicyEnum.verify(access_policy)
+        FSSupportedProtocolEnum.verify(supported_protocols)
+        FSLockingPolicyEnum.verify(locking_policy)
+        TieringPolicyEnum.verify(tiering_policy)
+
+        fs_param = UnityClient.make_body(
+            allow_empty=True,
+            pool=kwargs.get('pool'),
+            nasServer=kwargs.get('nas_server'),
+            supportedProtocols=supported_protocols,
+            isThinEnabled=kwargs.get('is_thin_enabled'),
+            size=kwargs.get('size'),
+            accessPolicy=access_policy,
+            lockingPolicy=locking_policy)
+
+        if tiering_policy:
+            fs_param['fastVPParameters'] = UnityClient.make_body(
+                allow_empty=True, tieringPolicy=tiering_policy)
+
+        compression_body = make_compression_body(kwargs.get('is_compression'))
+        fs_param.update(compression_body)
+        return fs_param
+
+    @staticmethod
+    def prepare_cifs_fs_parameters(
+            is_cifs_sync_writes_enabled=None,
+            is_cifs_op_locks_enabled=None,
+            is_cifs_notify_on_write_enabled=None,
+            is_cifs_notify_on_access_enabled=None,
+            cifs_notify_on_change_dir_depth=None):
+        return UnityClient.make_body(
+            allow_empty=True,
+            isCIFSSyncWritesEnabled=is_cifs_sync_writes_enabled,
+            isCIFSOpLocksEnabled=is_cifs_op_locks_enabled,
+            isCIFSNotifyOnWriteEnabled=is_cifs_notify_on_write_enabled,
+            isCIFSNotifyOnAccessEnabled=is_cifs_notify_on_access_enabled,
+            cifsNotifyOnChangeDirDepth=cifs_notify_on_change_dir_depth)
 
 
 class UnityFileSystemList(UnityResourceList):
