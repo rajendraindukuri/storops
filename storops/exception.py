@@ -1370,8 +1370,12 @@ class UnityMigrationTimeoutException(UnityMigrationException):
 
 
 @rest_exception
-class UnityDeleteLunInReplicationError(UnityException):
+class UnityDeleteResourceInReplicationError(UnityException):
     error_code = 105906485
+
+
+# To keep compatibility.
+UnityDeleteLunInReplicationError = UnityDeleteResourceInReplicationError
 
 
 class UnityImportSessionException(UnityException):
