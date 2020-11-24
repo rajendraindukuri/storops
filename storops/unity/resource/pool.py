@@ -21,6 +21,8 @@ import logging
 import bitmath
 
 import storops.unity.resource.filesystem
+from storops.lib.models import UnityModel
+from storops.lib.version import version
 from storops.unity.resource import UnityResource, \
     UnityAttributeResource, UnityResourceList
 from storops.unity.resource.disk import UnityDiskGroup, UnityDiskList
@@ -109,7 +111,8 @@ class UnityPool(UnityResource):
                    is_repl_dst=None, snap_schedule=None,
                    is_snap_schedule_paused=None,
                    skip_sync_to_remote_system=None,
-                   io_limit_policy=None, is_compression=None):
+                   io_limit_policy=None, is_compression=None,
+                   is_advanced_dedup_enabled=None):
         size = int(bitmath.GiB(size_gb).to_Byte().value)
         return UnityLun.create(
             self._cli, lun_name, self, size, sp=sp,
@@ -121,7 +124,8 @@ class UnityPool(UnityResource):
             is_snap_schedule_paused=is_snap_schedule_paused,
             skip_sync_to_remote_system=skip_sync_to_remote_system,
             io_limit_policy=io_limit_policy,
-            is_compression=is_compression)
+            is_compression=is_compression,
+            is_advanced_dedup_enabled=is_advanced_dedup_enabled)
 
     def create_vmfs(self, vmfs_name=None, size_gb=1, sp=None, host_access=None,
                     is_thin=None, description=None, tiering_policy=None,
@@ -233,6 +237,34 @@ class UnityPool(UnityResource):
             else:
                 dgs[pd.disk_group.get_id()] = [pd]
         return dgs
+
+    def is_compression_supported(self):
+        return self.is_all_flash
+
+    def _is_advanced_dedup_supported(self, support_matrix):
+        from storops.unity.resource.system import UnitySystem
+        unity_system = UnitySystem(cli=self._cli)
+        supported = False
+        for supported_model in support_matrix:
+            if UnityModel(unity_system.model) >= UnityModel(supported_model):
+                supported = True
+                break
+        return supported and self.is_all_flash
+
+    @version('<4.5')
+    def is_advanced_dedup_supported(self):
+        return False
+
+    @version('>=4.5')  # noqa
+    def is_advanced_dedup_supported(self):
+        support_matrix = ['450F', '550F', '650F']
+        return self._is_advanced_dedup_supported(support_matrix)
+
+    @version('>=5.0')  # noqa
+    def is_advanced_dedup_supported(self):
+        support_matrix = ['380', '480', '680', '880',
+                          '380F', '450F', '550F', '650F', '880F']
+        return self._is_advanced_dedup_supported(support_matrix)
 
 
 class UnityPoolList(UnityResourceList):
