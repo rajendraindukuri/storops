@@ -57,6 +57,8 @@ from storops.unity.resource.metric import UnityMetricQueryResultList, \
 from storops.unity.resource.move_session import UnityMoveSessionList
 from storops.unity.resource.nas_server import UnityNasServer, \
     UnityNasServerList
+from storops.unity.resource.user_quota import UnityUserQuota, \
+    UnityUserQuotaList
 from storops.unity.resource.nfs_server import UnityNfsServerList
 from storops.unity.resource.nfs_share import UnityNfsShareList
 from storops.unity.resource.pool import UnityPoolList, \
@@ -328,6 +330,40 @@ class UnitySystemTest(TestCase):
         pool = unity.get_pool(_id='pool_1')
         nas_server = unity.create_nas_server('nas3', sp, pool)
         assert_that(nas_server.existed, equal_to(True))
+
+    @patch_rest
+    def test_get_user_quota_all(self):
+        unity = t_unity()
+        user_quota_list = unity.get_user_quota()
+        assert_that(user_quota_list, instance_of(UnityUserQuotaList))
+        assert_that(len(user_quota_list), equal_to(2))
+
+    @patch_rest
+    def test_get_specific_user_quota(self):
+        unity = t_unity()
+        user_quota = unity.get_user_quota(_id='userquota_171798692187_3_3')
+        assert_that(user_quota, instance_of(UnityUserQuota))
+        assert_that(user_quota.id, equal_to('userquota_171798692187_3_3'))
+        assert_that(user_quota.existed, equal_to(True))
+
+    @patch_rest
+    def test_create_user_quota(self):
+        unity = t_unity()
+        created_user_quota = unity.create_user_quota(
+                              file_system_id='fs_2', hard_limit=9663676416,
+                              soft_limit=3221225472, uid=3)
+        assert_that(created_user_quota, instance_of(UnityUserQuota))
+        assert_that(created_user_quota.id,
+                    equal_to('userquota_171798692187_3_3'))
+        assert_that(created_user_quota.existed, equal_to(True))
+
+    @patch_rest
+    def test_modify_user_quota(self):
+        unity = t_unity()
+        resp = unity.modify_user_quota(
+                      user_quota_id='userquota_171798692187_3_3',
+                      hard_limit=8589934592, soft_limit=2147483648)
+        assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
     def test_auto_balance_sp_one_sp(self):

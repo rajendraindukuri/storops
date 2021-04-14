@@ -44,6 +44,8 @@ from storops.unity.resource.lun import UnityLunList
 from storops.unity.resource.metric import UnityMetricRealTimeQuery
 from storops.unity.resource.move_session import UnityMoveSessionList
 from storops.unity.resource.nas_server import UnityNasServerList
+from storops.unity.resource.user_quota import UnityUserQuota, \
+    UnityUserQuotaList
 from storops.unity.resource.nfs_server import UnityNfsServerList
 from storops.unity.resource.nfs_share import UnityNfsShareList
 from storops.unity.resource.pool import UnityPoolList, UnityPool
@@ -179,6 +181,9 @@ class UnitySystem(UnitySingletonResource):
         return self._get_unity_rsc(UnityNasServerList, _id=_id, name=name,
                                    **filters)
 
+    def get_user_quota(self, _id=None, **filters):
+        return self._get_unity_rsc(UnityUserQuotaList, _id=_id, **filters)
+
     def get_cifs_server(self, _id=None, name=None, **filters):
         return self._get_unity_rsc(UnityCifsServerList, _id=_id, name=name,
                                    **filters)
@@ -198,6 +203,25 @@ class UnitySystem(UnitySingletonResource):
         return sp.create_nas_server(name, pool,
                                     is_repl_dst=is_repl_dst,
                                     multi_proto=multi_proto, tenant=tenant)
+
+    def create_user_quota(self, file_system_id=None, tree_quota_id=None,
+                          hard_limit=None, soft_limit=None, uid=None,
+                          unix_name=None, win_name=None):
+        return UnityUserQuota.create(cli=self._cli,
+                                     file_system_id=file_system_id,
+                                     tree_quota_id=tree_quota_id,
+                                     hard_limit=hard_limit,
+                                     soft_limit=soft_limit,
+                                     uid=uid,
+                                     unix_name=unix_name,
+                                     win_name=win_name)
+
+    def modify_user_quota(self, user_quota_id,
+                          hard_limit=None, soft_limit=None):
+        return UnityUserQuota.modify(self._cli,
+                                     user_quota_id=user_quota_id,
+                                     hard_limit=hard_limit,
+                                     soft_limit=soft_limit)
 
     def _auto_balance_sp(self):
         sp_list = self.get_sp()

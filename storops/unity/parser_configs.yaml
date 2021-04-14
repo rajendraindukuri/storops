@@ -2336,3 +2336,18 @@ UnityAlert:
     - label: resolutionId
     - label: resolution
     - label: isAcknowledged
+
+UnityUserQuota:
+  data_src: rest
+  name: userQuota
+  properties:
+    - label: id
+    - label: filesystem
+      converter: UnityFileSystem
+    - label: gpLeft
+    - label: hardLimit
+    - label: hardRatio
+    - label: sizeUsed
+    - label: softLimit
+    - label: softRatio
+    - label: state
