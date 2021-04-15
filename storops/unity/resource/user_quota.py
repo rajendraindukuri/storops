@@ -58,10 +58,16 @@ class UnityUserQuota(UnityResource):
             of uid/unix_name/win_name should be provided
         :return: created user quota.
         """
-        fs_clz = storops.unity.resource.filesystem.UnityFileSystem
-        file_system = fs_clz.get(cli, file_system_id).verify()
+        if file_system_id is not None:
+            fs_clz = storops.unity.resource.filesystem.UnityFileSystem
+            file_system = fs_clz.get(cli, file_system_id).verify()
+
+        if tree_quota_id is not None:
+            tquota_clz = storops.unity.resource.tree_quota.UnityTreeQuota
+            tree_quota = tquota_clz.get(cli, tree_quota_id).verify()
+
         user_quota_param = cls.prepare_user_quota_create_parameters(
-            file_system, tree_quota_id, hard_limit, soft_limit, uid,
+            file_system, tree_quota, hard_limit, soft_limit, uid,
             unix_name, win_name)
         resp = cli.post(
             cls().resource_class, **user_quota_param)
@@ -92,8 +98,8 @@ class UnityUserQuota(UnityResource):
 
     @staticmethod
     def prepare_user_quota_create_parameters(
-                  file_system, tree_quota, hard_limit,
-                  soft_limit, uid, unix_name, win_name):
+            file_system, tree_quota, hard_limit, soft_limit,
+            uid, unix_name, win_name):
         """
         Prepare user_quota for the create operation
         :param file_system: This is needed if the user_quota is to be
