@@ -367,9 +367,10 @@ class UnitySystemTest(TestCase):
     def test_create_user_quota_negative(self):
         def f():
             unity = t_unity()
-            created_user_quota = unity.create_user_quota(
-                              filesystem_id='fs_99', hard_limit=9663676416,
-                              soft_limit=3221225472, uid=3)
+            unity.create_user_quota(filesystem_id='fs_99',
+                                    hard_limit=9663676416,
+                                    soft_limit=3221225472,
+                                    uid=3)
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
@@ -385,9 +386,10 @@ class UnitySystemTest(TestCase):
     def test_modify_user_quota_negative(self):
         def f():
             unity = t_unity()
-            resp = unity.modify_user_quota(
+            unity.modify_user_quota(
                       user_quota_id='abc',
-                      hard_limit=8589934592, soft_limit=2147483648)
+                      hard_limit=8589934592,
+                      soft_limit=2147483648)
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
