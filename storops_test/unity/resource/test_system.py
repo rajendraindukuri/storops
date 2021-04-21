@@ -347,15 +347,31 @@ class UnitySystemTest(TestCase):
         assert_that(user_quota.existed, equal_to(True))
 
     @patch_rest
+    def test_get_specific_user_quota_negative(self):
+        unity = t_unity()
+        user_quota = unity.get_user_quota(_id='abc')
+        assert_that(user_quota.existed, equal_to(False))
+
+    @patch_rest
     def test_create_user_quota(self):
         unity = t_unity()
         created_user_quota = unity.create_user_quota(
-                              file_system_id='fs_2', hard_limit=9663676416,
+                              filesystem_id='fs_2', hard_limit=9663676416,
                               soft_limit=3221225472, uid=3)
         assert_that(created_user_quota, instance_of(UnityUserQuota))
         assert_that(created_user_quota.id,
                     equal_to('userquota_171798692187_3_3'))
         assert_that(created_user_quota.existed, equal_to(True))
+
+    @patch_rest
+    def test_create_user_quota_negative(self):
+        def f():
+            unity = t_unity()
+            created_user_quota = unity.create_user_quota(
+                              filesystem_id='fs_99', hard_limit=9663676416,
+                              soft_limit=3221225472, uid=3)
+
+        assert_that(f, raises(UnityResourceNotFoundError))
 
     @patch_rest
     def test_modify_user_quota(self):
@@ -364,6 +380,16 @@ class UnitySystemTest(TestCase):
                       user_quota_id='userquota_171798692187_3_3',
                       hard_limit=8589934592, soft_limit=2147483648)
         assert_that(resp.is_ok(), equal_to(True))
+
+    @patch_rest
+    def test_modify_user_quota_negative(self):
+        def f():
+            unity = t_unity()
+            resp = unity.modify_user_quota(
+                      user_quota_id='abc',
+                      hard_limit=8589934592, soft_limit=2147483648)
+
+        assert_that(f, raises(UnityResourceNotFoundError))
 
     @patch_rest
     def test_auto_balance_sp_one_sp(self):

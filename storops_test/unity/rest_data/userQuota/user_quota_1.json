@@ -2,10 +2,8 @@
     "content": {
         "existed": true,
         "filesystem": {
-            "UnityFileSystem": {
-                "hash": -9223363242459834396,
-                "id": "fs_36"
-            }
+               "hash": -9223363242459834396,
+               "id": "fs_36"
         },
         "hard_limit": 16106127360,
         "hash": 8794394941297,

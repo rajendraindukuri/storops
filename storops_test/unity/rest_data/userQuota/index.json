@@ -12,6 +12,10 @@
       "url": "/api/instances/userQuota/userquota_171798692187_3_3?compact=True&fields=filesystem,gpLeft,hardLimit,id,sizeUsed,softLimit,state",
       "response": "user_quota_1.json"
     },
+   {
+      "url": "/api/instances/userQuota/abc?compact=True&fields=filesystem,gpLeft,hardLimit,id,sizeUsed,softLimit,state",
+      "response": "user_quota_not_found.json"
+    },
     {
       "url": "/api/types/userQuota/instances?compact=True",
       "body": {
@@ -32,7 +36,5 @@
       },
       "response": "modify_user_quota.json"
     }
-
-
   ]
 }

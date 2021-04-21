@@ -204,11 +204,11 @@ class UnitySystem(UnitySingletonResource):
                                     is_repl_dst=is_repl_dst,
                                     multi_proto=multi_proto, tenant=tenant)
 
-    def create_user_quota(self, file_system_id=None, tree_quota_id=None,
+    def create_user_quota(self, filesystem_id=None, tree_quota_id=None,
                           hard_limit=None, soft_limit=None, uid=None,
                           unix_name=None, win_name=None):
         return UnityUserQuota.create(cli=self._cli,
-                                     file_system_id=file_system_id,
+                                     filesystem_id=filesystem_id,
                                      tree_quota_id=tree_quota_id,
                                      hard_limit=hard_limit,
                                      soft_limit=soft_limit,

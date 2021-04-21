@@ -18,8 +18,10 @@ from unittest import TestCase
 
 import ddt
 
-from hamcrest import assert_that, equal_to, instance_of
+from hamcrest import assert_that, equal_to, instance_of, raises
 
+from storops.exception import UnityResourceNotFoundError
+from storops.unity.resource.filesystem import UnityFileSystem
 from storops.unity.resource.user_quota import UnityUserQuotaList, \
      UnityUserQuota
 from storops_test.unity.rest_mock import t_rest, patch_rest
@@ -44,9 +46,15 @@ class UnityUserQuotaListTest(TestCase):
         assert_that(user_quota.existed, equal_to(True))
 
     @patch_rest
+    def test_get_specific_user_quota_not_found(self):
+        user_quota = UnityUserQuota(
+                      _id='abc', cli=t_rest())
+        assert_that(user_quota.existed, equal_to(False))
+
+    @patch_rest
     def test_create_user_quota(self):
         ret = UnityUserQuota.create(cli=t_rest(),
-                                    file_system_id='fs_2',
+                                    filesystem_id='fs_2',
                                     hard_limit=9663676416,
                                     soft_limit=3221225472,
                                     uid=3)
@@ -55,8 +63,28 @@ class UnityUserQuotaListTest(TestCase):
         assert_that(ret.existed, equal_to(True))
 
     @patch_rest
+    def test_create_user_quota_negative(self):
+        def f():
+            user_quota = UnityUserQuota.create(cli=t_rest(),
+                                               filesystem_id='fs_99',
+                                               hard_limit=9663676416,
+                                               soft_limit=3221225472,
+                                               uid=3)
+
+        assert_that(f, raises(UnityResourceNotFoundError))
+
+    @patch_rest
     def test_modify_user_quota(self):
         resp = UnityUserQuota.modify(
                 cli=t_rest(), user_quota_id='userquota_171798692187_3_3',
                 hard_limit=8589934592, soft_limit=2147483648)
         assert_that(resp.is_ok(), equal_to(True))
+
+    @patch_rest
+    def test_modify_user_quota_negative(self):
+        def f():
+            resp = UnityUserQuota.modify(
+                cli=t_rest(), user_quota_id='abc',
+                hard_limit=8589934592, soft_limit=2147483648)
+
+        assert_that(f, raises(UnityResourceNotFoundError))

@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 import logging
 
 import storops
+from storops.exception import UnityResourceNotFoundError
 from storops.unity.resource import UnityResource, UnityResourceList
 from storops.unity.client import UnityClient
 
@@ -35,20 +36,20 @@ class UnityUserQuota(UnityResource):
     modify: Modify user_quota on a file_system/tree_quota
     """
     @classmethod
-    def create(cls, cli, file_system_id=None, tree_quota_id=None,
+    def create(cls, cli, filesystem_id=None, tree_quota_id=None,
                hard_limit=None, soft_limit=None, uid=None,
                unix_name=None, win_name=None):
         """
-        Creates user_quota on the speficied filesystem or tree quota
-        :param file_system_id: This is an optional parameter which if provided
-            will create user_quota on the file_system specified. file_system_id
+        Creates user_quota on the specified filesystem or tree quota
+        :param filesystem_id: This is an optional parameter which if provided
+            will create user_quota on the filesystem specified. filesystem_id
             and tree_quota_id cannot be given together
         :param tree_quota_id: This is an optional parameter which if provided
             will create user_quota on the tree_quota specified. file_system_id
             and tree_quota_id cannot be given together
-        :param hard_limit: sets hard_limit  on the file_system for the user
+        :param hard_limit: sets hard_limit on the file_system for the user
             specified
-        :param soft_limit: sets soft_limit  on the file_system for the user
+        :param soft_limit: sets soft_limit on the file_system for the user
             specified
         :param uid: This is an optional parameter to specify user. Either of
             uid/unix_name/win_name should be provided
@@ -59,9 +60,13 @@ class UnityUserQuota(UnityResource):
         :return: created user quota.
         """
         fs_clz = storops.unity.resource.filesystem.UnityFileSystem
-        file_system = fs_clz.get(cli, file_system_id).verify()
+        filesystem = fs_clz.get(_id=filesystem_id, cli=cli)
+        if not filesystem.existed:
+            raise UnityResourceNotFoundError(
+                'cannot find filesystem {}.'.format(filesystem_id))
+
         user_quota_param = cls.prepare_user_quota_create_parameters(
-            file_system, tree_quota_id, hard_limit, soft_limit, uid,
+            filesystem, tree_quota_id, hard_limit, soft_limit, uid,
             unix_name, win_name)
         resp = cli.post(
             cls().resource_class, **user_quota_param)
@@ -74,12 +79,17 @@ class UnityUserQuota(UnityResource):
         Modifies user_quota params for the specified user_quota_id
         :param user_quota_id: This is required which speicfies user_quota to
             be modified
-        :param hard_limit: modifies hard_limit  on the file_system for the
+        :param hard_limit: modifies hard_limit on the file_system for the
             user_quota specified
-        :param soft_limit: modifies soft_limit  on the file_system for the
+        :param soft_limit: modifies soft_limit on the file_system for the
             user_quota specified
-        :return: created user quota.
+        :return: None
         """
+        user_quota = UnityUserQuota.get(_id=user_quota_id, cli=cli)
+        if not user_quota.existed:
+            raise UnityResourceNotFoundError(
+                'cannot find user_quota {}.'.format(user_quota_id))
+
         req_body = cli.make_body(
             allow_empty=False,
             hardLimit=hard_limit,
@@ -92,21 +102,24 @@ class UnityUserQuota(UnityResource):
 
     @staticmethod
     def prepare_user_quota_create_parameters(
-                  file_system, tree_quota, hard_limit,
+                  filesystem, tree_quota, hard_limit,
                   soft_limit, uid, unix_name, win_name):
         """
         Prepare user_quota for the create operation
-        :param file_system: This is needed if the user_quota is to be
-            created on the file_system
+        :param filesystem: This is needed if the user_quota is to be
+            created on the filesystem
         :param tree_quota: This is needed if the user_quota is to be
             created on the tree_quota
         :param hard_limit: hard_limit for the user_quota
         :param soft_limit: soft_limit for the user_quota
+        :param uid: uid of the user
+        :param unix_name: unix_name of the user
+        :param win_name: windows name of the user
         :return: user_quota_params for create user_quota preparation
         """
         user_quota_param = UnityClient.make_body(
             allow_empty=False,
-            filesystem=file_system,
+            filesystem=filesystem,
             treeQuota=tree_quota,
             hardLimit=hard_limit,
             softLimit=soft_limit,
