@@ -87,7 +87,6 @@ class UnityTreeQuota(UnityResource):
                 'cannot find tree_quota {}.'.format(tree_quota_id))
 
         req_body = cli.make_body(
-            allow_empty=False,
             description=description,
             hardLimit=hard_limit,
             softLimit=soft_limit
@@ -129,7 +128,6 @@ class UnityTreeQuota(UnityResource):
         :return: tree_quota_params for create tree_quota preparation
         """
         tree_quota_param = UnityClient.make_body(
-            allow_empty=False,
             filesystem=filesystem,
             path=path,
             description=description,

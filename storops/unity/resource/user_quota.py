@@ -99,7 +99,6 @@ class UnityUserQuota(UnityResource):
                 'cannot find user_quota {}.'.format(user_quota_id))
 
         req_body = cli.make_body(
-            allow_empty=False,
             hardLimit=hard_limit,
             softLimit=soft_limit
            )
@@ -127,7 +126,6 @@ class UnityUserQuota(UnityResource):
         :return: user_quota_params for create user_quota preparation
         """
         user_quota_param = UnityClient.make_body(
-            allow_empty=False,
             filesystem=filesystem,
             treeQuota=tree_quota,
             hardLimit=hard_limit,

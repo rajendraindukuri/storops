@@ -72,7 +72,6 @@ class UnityQuotaConfig(UnityResource):
             raise UnityQuotaConfigModifyException()
 
         req_body = cli.make_body(
-            allow_empty=False,
             quotaPolicy=quota_policy,
             isUserQuotaEnabled=is_user_quota_enabled,
             deleteUserQuotasWithDisable=delete_user_quotas_with_disable,
