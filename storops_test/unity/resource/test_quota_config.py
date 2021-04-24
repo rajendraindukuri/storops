@@ -48,7 +48,7 @@ class UnityQuotaConfigListTest(TestCase):
         assert_that(quota_config.existed, equal_to(True))
 
     @patch_rest
-    def test_get_specific_quota_config_negative(self):
+    def test_get_quota_config_not_found(self):
         quota_config = UnityQuotaConfig(_id='abc', cli=t_rest())
         assert_that(quota_config.existed, equal_to(False))
 
@@ -66,7 +66,7 @@ class UnityQuotaConfigListTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_modify_quota_config_negative(self):
+    def test_modify_quota_config_invalid_quota_config_id(self):
         def f():
             UnityQuotaConfig.modify(cli=t_rest(),
                                     quota_config_id='abc',
@@ -81,7 +81,7 @@ class UnityQuotaConfigListTest(TestCase):
         assert_that(f, raises(UnityResourceNotFoundError))
 
     @patch_rest
-    def test_modify_quota_config_pass_policy_is_qutoa_enabled_together(self):
+    def test_modify_quota_config_pass_policy_is_quota_enabled_together(self):
         def f():
             UnityQuotaConfig.modify(
                 cli=t_rest(), quota_config_id='quotaconfig_171798691845_1',

@@ -44,12 +44,6 @@ from storops.unity.resource.lun import UnityLunList
 from storops.unity.resource.metric import UnityMetricRealTimeQuery
 from storops.unity.resource.move_session import UnityMoveSessionList
 from storops.unity.resource.nas_server import UnityNasServerList
-from storops.unity.resource.user_quota import UnityUserQuota, \
-    UnityUserQuotaList
-from storops.unity.resource.tree_quota import UnityTreeQuota, \
-    UnityTreeQuotaList
-from storops.unity.resource.quota_config import UnityQuotaConfig, \
-    UnityQuotaConfigList
 from storops.unity.resource.nfs_server import UnityNfsServerList
 from storops.unity.resource.nfs_share import UnityNfsShareList
 from storops.unity.resource.pool import UnityPoolList, UnityPool
@@ -58,6 +52,8 @@ from storops.unity.resource.port import UnityEthernetPortList, \
 from storops.unity.resource.port import UnityIpPortList, UnityIoLimitPolicy, \
     UnityIoLimitPolicyList, UnityLinkAggregationList, UnityIscsiPortal, \
     UnitySasPortList, UnityIscsiNodeList
+from storops.unity.resource.quota_config import UnityQuotaConfig, \
+    UnityQuotaConfigList
 from storops.unity.resource.remote_interface import UnityRemoteInterfaceList
 from storops.unity.resource.remote_system import UnityRemoteSystemList, \
     UnityRemoteSystem
@@ -69,9 +65,13 @@ from storops.unity.resource.snap import UnitySnapList
 from storops.unity.resource.snap_schedule import UnitySnapScheduleList, \
     UnitySnapSchedule
 from storops.unity.resource.sp import UnityStorageProcessorList
+from storops.unity.resource.tree_quota import UnityTreeQuota, \
+    UnityTreeQuotaList
 from storops.unity.resource.cg import UnityConsistencyGroup, \
     UnityConsistencyGroupList
 from storops.unity.resource.tenant import UnityTenant, UnityTenantList
+from storops.unity.resource.user_quota import UnityUserQuota, \
+    UnityUserQuotaList
 from storops.unity.resource.vmware import UnityCapabilityProfileList
 
 __author__ = 'Jay Xu, Cedric Zhuang'

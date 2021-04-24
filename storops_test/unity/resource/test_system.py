@@ -58,12 +58,6 @@ from storops.unity.resource.metric import UnityMetricQueryResultList, \
 from storops.unity.resource.move_session import UnityMoveSessionList
 from storops.unity.resource.nas_server import UnityNasServer, \
     UnityNasServerList
-from storops.unity.resource.quota_config import UnityQuotaConfigList, \
-    UnityQuotaConfig
-from storops.unity.resource.tree_quota import UnityTreeQuota, \
-    UnityTreeQuotaList
-from storops.unity.resource.user_quota import UnityUserQuota, \
-    UnityUserQuotaList
 from storops.unity.resource.nfs_server import UnityNfsServerList
 from storops.unity.resource.nfs_share import UnityNfsShareList
 from storops.unity.resource.pool import UnityPoolList, \
@@ -71,6 +65,8 @@ from storops.unity.resource.pool import UnityPoolList, \
 from storops.unity.resource.port import UnityFcPortList
 from storops.unity.resource.port import UnityIpPortList, \
     UnityEthernetPortList, UnityIscsiPortalList
+from storops.unity.resource.quota_config import UnityQuotaConfigList, \
+    UnityQuotaConfig
 from storops.unity.resource.snap import UnitySnapList
 from storops.unity.resource.snap_schedule import UnitySnapScheduleRule
 from storops.unity.resource.sp import UnityStorageProcessor, \
@@ -81,6 +77,10 @@ from storops.unity.resource.system import UnitySystemList, UnitySystem, \
     UnityNtpServer, UnityDae, UnityFeature, UnityMgmtInterfaceList, \
     UnitySystemCapacityList, \
     UnitySystemTierCapacity, UnityIscsiNodeList
+from storops.unity.resource.tree_quota import UnityTreeQuota, \
+    UnityTreeQuotaList
+from storops.unity.resource.user_quota import UnityUserQuota, \
+    UnityUserQuotaList
 from storops.unity.resource.vmware import UnityCapabilityProfileList
 from storops_test.unity.rest_mock import t_rest, patch_rest, t_unity
 
@@ -352,7 +352,7 @@ class UnitySystemTest(TestCase):
         assert_that(user_quota.existed, equal_to(True))
 
     @patch_rest
-    def test_get_specific_user_quota_negative(self):
+    def test_get_user_quota_not_found(self):
         unity = t_unity()
         user_quota = unity.get_user_quota(_id='abc')
         assert_that(user_quota.existed, equal_to(False))
@@ -369,7 +369,7 @@ class UnitySystemTest(TestCase):
         assert_that(created_user_quota.existed, equal_to(True))
 
     @patch_rest
-    def test_create_user_quota_negative(self):
+    def test_create_user_quota_invalid_filesystem_id(self):
         def f():
             unity = t_unity()
             unity.create_user_quota(
@@ -382,11 +382,11 @@ class UnitySystemTest(TestCase):
     def test_create_user_quota_on_tree_quota(self):
         unity = t_unity()
         ret = unity.create_user_quota(
-                                    filesystem_id='fs_2',
-                                    tree_quota_id='treequota_171798692187_3',
-                                    hard_limit=9663676416,
-                                    soft_limit=3221225472,
-                                    uid=3)
+                      filesystem_id='fs_2',
+                      tree_quota_id='treequota_171798692187_3',
+                      hard_limit=9663676416,
+                      soft_limit=3221225472,
+                      uid=3)
         assert_that(ret, instance_of(UnityUserQuota))
         assert_that(ret.id, equal_to('userquota_171798692187_3_3'))
         assert_that(ret.existed, equal_to(True))
@@ -396,11 +396,11 @@ class UnitySystemTest(TestCase):
         def f():
             unity = t_unity()
             unity.create_user_quota(
-                                  filesystem_id='fs_99',
-                                  tree_quota_id='treequota_171798692187_3',
-                                  hard_limit=9663676416,
-                                  soft_limit=3221225472,
-                                  uid=3)
+                    filesystem_id='fs_99',
+                    tree_quota_id='treequota_171798692187_3',
+                    hard_limit=9663676416,
+                    soft_limit=3221225472,
+                    uid=3)
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
@@ -409,11 +409,11 @@ class UnitySystemTest(TestCase):
         def f():
             unity = t_unity()
             unity.create_user_quota(
-                                  filesystem_id='fs_2',
-                                  tree_quota_id='abc',
-                                  hard_limit=9663676416,
-                                  soft_limit=3221225472,
-                                  uid=3)
+                    filesystem_id='fs_2',
+                    tree_quota_id='abc',
+                    hard_limit=9663676416,
+                    soft_limit=3221225472,
+                    uid=3)
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
@@ -422,11 +422,11 @@ class UnitySystemTest(TestCase):
         def f():
             unity = t_unity()
             unity.create_user_quota(
-                                  filesystem_id='fs_99',
-                                  tree_quota_id='abc',
-                                  hard_limit=9663676416,
-                                  soft_limit=3221225472,
-                                  uid=3)
+                    filesystem_id='fs_99',
+                    tree_quota_id='abc',
+                    hard_limit=9663676416,
+                    soft_limit=3221225472,
+                    uid=3)
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
@@ -439,7 +439,7 @@ class UnitySystemTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_modify_user_quota_negative(self):
+    def test_modify_user_quota_invalid_user_quota_id(self):
         def f():
             unity = t_unity()
             unity.modify_user_quota(
@@ -465,7 +465,7 @@ class UnitySystemTest(TestCase):
         assert_that(tree_quota.existed, equal_to(True))
 
     @patch_rest
-    def test_get_specific_tree_quota_negative(self):
+    def test_get_tree_quota_not_found(self):
         unity = t_unity()
         tree_quota = unity.get_tree_quota(_id='abc')
         assert_that(tree_quota.existed, equal_to(False))
@@ -474,25 +474,25 @@ class UnitySystemTest(TestCase):
     def test_create_tree_quota(self):
         unity = t_unity()
         ret = unity.create_tree_quota(
-                                    filesystem_id='fs_2',
-                                    hard_limit=9663676416,
-                                    soft_limit=3221225472,
-                                    path='/myPath',
-                                    description="Creating Tree Quota")
+                      filesystem_id='fs_2',
+                      hard_limit=9663676416,
+                      soft_limit=3221225472,
+                      path='/myPath',
+                      description="Creating Tree Quota")
         assert_that(ret, instance_of(UnityTreeQuota))
         assert_that(ret.id, equal_to('treequota_171798692187_3'))
         assert_that(ret.existed, equal_to(True))
 
     @patch_rest
-    def test_create_tree_quota_negative(self):
+    def test_create_tree_quota_invalid_filesystem_id(self):
         def f():
             unity = t_unity()
             unity.create_tree_quota(
-                                    filesystem_id='fs_99',
-                                    hard_limit=9663676416,
-                                    soft_limit=3221225472,
-                                    path='/myPath',
-                                    description="Creating Tree Quota")
+                    filesystem_id='fs_99',
+                    hard_limit=9663676416,
+                    soft_limit=3221225472,
+                    path='/myPath',
+                    description="Creating Tree Quota")
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
@@ -506,14 +506,14 @@ class UnitySystemTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_modify_tree_quota_negative(self):
+    def test_modify_tree_quota_invalid_tree_quota_id(self):
         def f():
             unity = t_unity()
             unity.modify_tree_quota(
-                                    tree_quota_id='abc',
-                                    hard_limit=8589934592,
-                                    soft_limit=2147483648,
-                                    description="modify tree Quota")
+                    tree_quota_id='abc',
+                    hard_limit=8589934592,
+                    soft_limit=2147483648,
+                    description="modify tree Quota")
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
@@ -525,7 +525,7 @@ class UnitySystemTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_delete_tree_quota_negative(self):
+    def test_delete_tree_quota_invalid_tree_quota_id(self):
         def f():
             unity = t_unity()
             unity.delete_tree_quota(tree_quota_id='abc')
@@ -549,7 +549,7 @@ class UnitySystemTest(TestCase):
         assert_that(quota_config.existed, equal_to(True))
 
     @patch_rest
-    def test_get_specific_quota_config_negative(self):
+    def test_get_quota_config_not_found(self):
         unity = t_unity()
         quota_config = unity.get_quota_config(_id='abc')
         assert_that(quota_config.existed, equal_to(False))
@@ -569,23 +569,23 @@ class UnitySystemTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_modify_quota_config_negative(self):
+    def test_modify_quota_config_invalid_quota_config_id(self):
         def f():
             unity = t_unity()
             unity.modify_quota_config(
-                                      quota_config_id='abc',
-                                      quota_policy=QuotaPolicyEnum.BLOCKS,
-                                      is_user_quota_enabled=None,
-                                      delete_user_quotas_with_disable=False,
-                                      is_access_deny_enabled=False,
-                                      grace_period=345600,
-                                      default_hard_limit=8589934592,
-                                      default_soft_limit=2147483648)
+                    quota_config_id='abc',
+                    quota_policy=QuotaPolicyEnum.BLOCKS,
+                    is_user_quota_enabled=None,
+                    delete_user_quotas_with_disable=False,
+                    is_access_deny_enabled=False,
+                    grace_period=345600,
+                    default_hard_limit=8589934592,
+                    default_soft_limit=2147483648)
 
         assert_that(f, raises(UnityResourceNotFoundError))
 
     @patch_rest
-    def test_modify_quota_config_pass_policy_is_qutoa_enabled_together(self):
+    def test_modify_quota_config_pass_policy_is_quota_enabled_together(self):
         def f():
             unity = t_unity()
             unity.modify_quota_config(

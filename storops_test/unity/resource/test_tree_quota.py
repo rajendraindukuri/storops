@@ -21,8 +21,8 @@ import ddt
 from hamcrest import assert_that, equal_to, instance_of, raises
 
 from storops.exception import UnityResourceNotFoundError
-from storops.unity.resource.tree_quota import UnityTreeQuotaList, \
-     UnityTreeQuota
+from storops.unity.resource.tree_quota import UnityTreeQuota, \
+     UnityTreeQuotaList
 from storops_test.unity.rest_mock import t_rest, patch_rest
 
 __author__ = 'Rajendra Indukuri'
@@ -46,7 +46,7 @@ class UnityTreeQuotaListTest(TestCase):
         assert_that(tree_quota.existed, equal_to(True))
 
     @patch_rest
-    def test_get_specific_tree_quota_negative(self):
+    def test_get_tree_quota_not_found(self):
         tree_quota = UnityTreeQuota(_id='abc', cli=t_rest())
         assert_that(tree_quota.existed, equal_to(False))
 
@@ -62,7 +62,7 @@ class UnityTreeQuotaListTest(TestCase):
         assert_that(ret.existed, equal_to(True))
 
     @patch_rest
-    def test_create_tree_quota_negative(self):
+    def test_create_tree_quota_invalid_filesystem_id(self):
         def f():
             UnityTreeQuota.create(
                 cli=t_rest(), filesystem_id='fs_99',
@@ -81,7 +81,7 @@ class UnityTreeQuotaListTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_modify_tree_quota_negative(self):
+    def test_modify_tree_quota_invalid_treequota_id(self):
         def f():
             UnityTreeQuota.modify(cli=t_rest(),
                                   tree_quota_id='abc',
@@ -98,7 +98,7 @@ class UnityTreeQuotaListTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_delete_tree_quota_negative(self):
+    def test_delete_tree_quota_invalid_tree_quota_id(self):
         def f():
             UnityTreeQuota.delete(cli=t_rest(), tree_quota_id='abc')
 

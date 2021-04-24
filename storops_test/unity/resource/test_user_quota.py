@@ -21,8 +21,8 @@ import ddt
 from hamcrest import assert_that, equal_to, instance_of, raises
 
 from storops.exception import UnityResourceNotFoundError
-from storops.unity.resource.user_quota import UnityUserQuotaList, \
-     UnityUserQuota
+from storops.unity.resource.user_quota import UnityUserQuota, \
+     UnityUserQuotaList
 from storops_test.unity.rest_mock import t_rest, patch_rest
 
 __author__ = 'Rajendra Indukuri'
@@ -45,7 +45,7 @@ class UnityUserQuotaListTest(TestCase):
         assert_that(user_quota.existed, equal_to(True))
 
     @patch_rest
-    def test_get_specific_user_quota_not_found(self):
+    def test_get_user_quota_not_found(self):
         user_quota = UnityUserQuota(
                       _id='abc', cli=t_rest())
         assert_that(user_quota.existed, equal_to(False))
@@ -62,7 +62,7 @@ class UnityUserQuotaListTest(TestCase):
         assert_that(ret.existed, equal_to(True))
 
     @patch_rest
-    def test_create_user_quota_negative(self):
+    def test_create_user_quota_invalid_filesystem_id(self):
         def f():
             UnityUserQuota.create(cli=t_rest(),
                                   filesystem_id='fs_99',
@@ -124,7 +124,7 @@ class UnityUserQuotaListTest(TestCase):
         assert_that(resp.is_ok(), equal_to(True))
 
     @patch_rest
-    def test_modify_user_quota_negative(self):
+    def test_modify_user_quota_user_quota_id_invalid(self):
         def f():
             UnityUserQuota.modify(
                 cli=t_rest(), user_quota_id='abc',

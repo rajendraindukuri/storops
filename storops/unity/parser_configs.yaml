@@ -2337,6 +2337,7 @@ UnityAlert:
     - label: resolution
     - label: isAcknowledged
 
+
 UnityUserQuota:
   data_src: rest
   name: userQuota
@@ -2358,6 +2359,7 @@ UnityUserQuota:
     - label: windowsNames
     - label: windowsSIDs
 
+
 UnityTreeQuota:
   data_src: rest
   name: treeQuota
@@ -2372,6 +2374,7 @@ UnityTreeQuota:
     - label: sizeUsed
     - label: softLimit
     - label: state
+
 
 UnityQuotaConfig:
   data_src: rest
